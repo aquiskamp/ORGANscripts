@@ -29,7 +29,7 @@ from ctypes import (
     byref,
 )
 
-ato_pos_start = 600
+ato_pos_start = 500
 ato_pos_end = 900 #ie 360deg
 ato_pos_step = 10 #at roomtemp, 60V and f=1000Hz, step ~ 0.01deg
 up_down = 'd' # set to up, to set to down replace 'u' with 'd'
