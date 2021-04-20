@@ -5,7 +5,7 @@ __version__ = '20.03.2015_1.0'
 
 # ---- GPIB Communications Settings of this instrument >>>>
 
-VNA_gpib = "GPIB5::10::INSTR"  # Full GPIB Address of VNA
+VNA_gpib = "GPIB1::10::INSTR"  # Full GPIB Address of VNA
 VNA_device_id = "Agilent Technologies,N5230A,MY45001201,A.07.50.67"  # VNA ID String
 
 # <<<<<<

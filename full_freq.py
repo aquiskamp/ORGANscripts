@@ -19,17 +19,17 @@ from prettytable import PrettyTable
 import vna_single_sweep as vnass
 import lakeshore_temp as lakesm
 #import amag_ramp as amagrp
-sweep_type = "cal"
+sweep_type = "4K"
 
 # Folder To Save Files to:
-filepath = r"C:\Users\equslab\Desktop\ORGAN_15GHz\r_cal_amp_10_30"
+filepath = r"C:\Users\21727308\Desktop\VNA\ORGANattocube\4K_circ"
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = r"run1.csv"
 
 # Send error notifications to email addresses:
-warn_email_list = ['maxim.goryachev@uwa.edu.au']
+warn_email_list = ['aaron.quiskamp@uwa.edu.au']
 
 
 channel = "1"
