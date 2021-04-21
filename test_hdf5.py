@@ -31,11 +31,12 @@ for mode in mode_list:
     power = mode[4]
     print(mode)
     print(list(mode_list).index(mode))
-    sweep_data =np.ones(1601)
+    sweep_data =np.array([np.ones(1601),np.ones(1601)])
 
     if list(mode_list).index(mode) == 0:
         ready_data = np.transpose(sweep_data)
     else:
-        ready_data = np.append(ready_data,np.transpose(sweep_data)[:-1])
+        ready_data = np.vstack((ready_data,np.transpose(sweep_data)[:-1]))
 
-    print(ready_data.size)
+    print(ready_data.shape)
+    print(ready_data)
