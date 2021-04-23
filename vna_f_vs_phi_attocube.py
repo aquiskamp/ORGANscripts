@@ -29,9 +29,9 @@ from ctypes import (
     byref,
 )
 
-ato_pos_start = 500
-ato_pos_end = 900 #ie 360deg
-ato_pos_step = 10 #at roomtemp, 60V and f=1000Hz, step ~ 0.01deg
+ato_pos_start = 0
+ato_pos_end = 5000 #ie 360deg
+ato_pos_step = 30 #at roomtemp, 60V and f=1000Hz, step ~ 0.01deg
 up_down = 'd' # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
@@ -46,7 +46,7 @@ temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Acce
 
 
 # Folder To Save Files to:
-filepath = r'C:\Users\equslab\Desktop\ORGAN_15GHz\cage_mount_screws_trans'
+filepath = r'C:\Users\equslab\Desktop\ORGAN_15GHz\ORGAN_cal_refl_before_DR4'
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power

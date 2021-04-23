@@ -31,9 +31,9 @@ from ctypes import (
     byref,
 )
 anc = ANC300()
-ato_pos_start = 20
-ato_pos_end = 900 #ie 360deg
-ato_pos_step = 10 #at roomtemp, 60V and f=1000Hz, step ~ 0.01deg
+ato_pos_start = 0
+ato_pos_end = 2500 #ie 360deg
+ato_pos_step = 20 #at roomtemp, 60V and f=1000Hz, step ~ 0.01deg
 up_down = 'd' # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
@@ -48,8 +48,8 @@ temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Acce
 
 
 # Folder To Save Files to:
-exp_name = 'script_test'
-filepath = p.home()/'Desktop'/'VNA'/'ORGANattocube'/exp_name
+exp_name = 'before_DR4_trans_remove_rod_water_rotate_addwasher'
+filepath = p.home()/'Desktop'/'ORGAN_15GHz'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
@@ -118,7 +118,7 @@ if measure_temp:
 for ato_pos in ato_pos_vals:
     print("Set position to ato_pos = " + str(ato_pos) + " " + "Steps")
     idx = list(ato_pos_vals).index(ato_pos)
-    ato_step = ato_pos - ato_pos_vals[idx - 1]
+    ato_step = ato_pos_step  #ato_pos - ato_pos_vals[idx - 1]
     if ato_pos == 0 or idx == 0: #since send a 0 instructs the stage to move continuously
         anc.stop()
         anc.ground()
@@ -147,11 +147,11 @@ for ato_pos in ato_pos_vals:
 
         fig.clf()
         ax = fig.add_subplot(111)
-        ax.set_title("ato_pos = %.5f T, f = %.4e (%d) Hz" % (ato_pos, fcent, fcent), fontsize=16)
-        ax.plot(freq_data, gen.complex_to_dB(sweep_data), "g")
+        ax.set_title("ato_pos = %.1f, f = %.3f GHz" % (ato_pos, fcent/1e9), fontsize=16)
+        ax.plot(freq_data/1e9, gen.complex_to_dB(sweep_data), "g")
         ax.set_ylabel('S21 [dB]')
-        ax.set_xlabel('Frequency [Hz]')
-        ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%2.2e'))
+        ax.set_xlabel('Frequency [GHz]')
+        #ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%2.2e'))
         plt.axis('tight')
         plt.draw()
 
@@ -168,25 +168,28 @@ for ato_pos in ato_pos_vals:
         except:
             None
 
+        full_freq = np.linspace(mode_list[0][0]-fspan//2,fcent + fspan//2,ready_data.shape[0]) #freq list in Hz
         dset = f.create_dataset(str(ato_pos), data = ready_data, compression='gzip', compression_opts=6)  # VNA dset
-        dset.attrs['f_start'] = mode_list[0][0]  # this is from the mode map / next freq
-        dset.attrs['f_final'] = fcent
-        dset.attrs['sweep_type'] = sweep_type
-        dset.attrs['vna_pow'] = power
-        dset.attrs['vna_span'] = fspan
-        dset.attrs['vna_pts'] = npoints
-        dset.attrs['vna_ave'] = naverages
-        dset.attrs['vna_rbw'] = fspan/(npoints-1)
-        dset.attrs['vna_ifb'] = bandwidth
+        try:
+            f['Freq']
+        except:
+            fdset = f.create_dataset('Freq', data=full_freq, compression='gzip', compression_opts=6)
+            fdset.attrs['f_start'] = mode_list[0][0]  # this is from the mode map / next freq
+            fdset.attrs['f_final'] = fcent
+            fdset.attrs['sweep_type'] = sweep_type
+            fdset.attrs['vna_pow'] = power
+            fdset.attrs['vna_span'] = fspan
+            fdset.attrs['vna_pts'] = npoints
+            fdset.attrs['vna_ave'] = naverages
+            fdset.attrs['vna_rbw'] = fspan/(npoints-1)
+            fdset.attrs['vna_ifb'] = bandwidth
+            fdset.attrs['nmodes'] = mode_list.shape[0]
+            fdset.attrs['ato_voltage'] = setVoltage['x']
+            fdset.attrs['ato_freq'] = setFreq['x']
         dset.attrs['ato_step'] = ato_step
         dset.attrs['ato_pos'] = ato_pos
-        dset.attrs['ato_voltage'] = setVoltage['x']
-        dset.attrs['ato_freq'] = setFreq['x']
         dset.attrs['temp'] = temperature
-        dset.attrs['nmodes'] = mode_list.shape[0]
         dset.attrs['time'] = t
-        dset.attrs['full_freq'] = np.linspace(mode_list[0][0]-fspan//2,fcent + fspan//2,ready_data.shape[0]) #freq list in Hz
-
 
 if measure_temp:
     lakesm.disconnect() # Disconnect from Lakeshore if actively measured temperature
