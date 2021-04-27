@@ -1,7 +1,5 @@
 __author__ = 'Aaron'
-__version__ = '20.03.2015_1.0'
 
-# THIS SCRIPTS INITIATES A frequency vs B-field Sweep Using Agilent VNA and American Magnetics
 import warnings
 import os
 import time
@@ -9,7 +7,6 @@ import numpy as np
 import cryolib.general as gen
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
 from prettytable import PrettyTable
 from attocube.attocube import ANC300
 import vna_single_sweep as vnass
@@ -23,17 +20,10 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 matplotlib.use('TkAgg')
 
-#New code starts
-from ctypes import (
-    c_int,
-    c_char_p,
-    c_short,
-    byref,
-)
 anc = ANC300()
 ato_pos_start = 0
-ato_pos_end = 2500 #ie 360deg
-ato_pos_step = 20 #at roomtemp, 60V and f=1000Hz, step ~ 0.01deg
+ato_pos_end = 500000 #ie 360deg
+ato_pos_step = 200 #at roomtemp, 60V and f=1000Hz, step ~ 0.01deg
 up_down = 'd' # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
@@ -46,9 +36,8 @@ anc.freq = setFreq #This sets the frequency for the sweep.
 measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
-
 # Folder To Save Files to:
-exp_name = 'before_DR4_trans_remove_rod_water_rotate_addwasher'
+exp_name = 'ORGAN_DR5_warmup'
 filepath = p.home()/'Desktop'/'ORGAN_15GHz'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
@@ -64,7 +53,6 @@ sweep_type = "phi_pos"
 # Additional VNA Settings
 # (GPIB Settings are now located in /cryolib/vna_xxx)
 channel = "1" #VNA Channel Number
-
 
 # Temperature Controller Settings
 LAKE_gpib = "GPIB2::16::INSTR"
@@ -98,7 +86,6 @@ for row in mode_list:
 print("Loaded Settings:")
 print(table_data)
 
-
 # Starting Scan:
 ato_pos_vals = np.arange(ato_pos_start, ato_pos_end + ato_pos_step, ato_pos_step)
 
@@ -107,7 +94,6 @@ print("Running Sweep over Phi = [" + str(ato_pos_start) + ", " + str(ato_pos_end
 
 vnass.set_module(channel, warn_email_list) # Reset VNA Module
 vnass.establish_connection()    # Establish connection to VNA
-
 
 if measure_temp:
     print("Preparing Lakeshore for active Temperature Measurement")
@@ -136,8 +122,8 @@ for ato_pos in ato_pos_vals:
         fspan = mode[1]
         bandwidth = mode[2]
         npoints = int(mode[3])
-        power = mode[4]
-        naverages = mode[5]
+        naverages = mode[4]
+        power = mode[5]
 
         if measure_temp:
             temperature = lakesm.get_temp(LAKE_channel)
@@ -161,6 +147,7 @@ for ato_pos in ato_pos_vals:
             ready_data = np.vstack((ready_data, np.transpose(sweep_data)[1:]))
 
         t = datetime.now(timezone('Australia/Perth')).strftime(fmt)
+
     with h5py.File(filepath/p(exp_name + '.hdf5'), 'a') as f:
         try:
             if f[str(ato_pos)]:
@@ -186,11 +173,15 @@ for ato_pos in ato_pos_vals:
             fdset.attrs['nmodes'] = mode_list.shape[0]
             fdset.attrs['ato_voltage'] = setVoltage['x']
             fdset.attrs['ato_freq'] = setFreq['x']
-        dset.attrs['ato_step'] = ato_step
+            fdset.attrs['ato_step'] = ato_step
         dset.attrs['ato_pos'] = ato_pos
         dset.attrs['temp'] = temperature
         dset.attrs['time'] = t
-
+    # time.sleep(120)
+    # print('Script is sleeping for 120 seconds')
+    # if idx%5 == 0:
+    #     print('Poisitoner is sleeping for 10 mins...')
+    #     time.sleep(60*10)
 if measure_temp:
     lakesm.disconnect() # Disconnect from Lakeshore if actively measured temperature
 
