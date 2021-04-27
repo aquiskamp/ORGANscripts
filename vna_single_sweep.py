@@ -5,11 +5,11 @@ __version__ = '20.03.2015_1.0'
 # THEREFORE, ONLY ONE VNA CAN BE CONNECTED TO AND CONTROLLED AT A TIME
 import time
 
-#import cryolib.vna_n5230a_PNA as vna
+import cryolib.vna_n5230a_PNA as vna
 #import cryolib.vna_N5225A_VNA as vna
 #import cryolib.vna_E5061B_ENA as vna
 #import cryolib.vna_FFox as vna
-import cryolib.vna_8720ET_VNA as vna
+#import cryolib.vna_8720ET_VNA as vna
 
 import pyvisa # important for catching of visa errors
 import cryolib.email_notification as emailnotif # import email notification module
@@ -103,6 +103,9 @@ def get_maxi():
 def width():
     w = vna.get_width(inst)
     return w
+def power_on_off(on_off):
+    vna.power_on_off(inst, on_off)
+    return
 
 # Do a sweep
 # Params: [fcent, fspan, bandwidth, npoints, power]

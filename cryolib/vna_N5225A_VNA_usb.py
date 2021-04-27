@@ -28,15 +28,9 @@ def connect(VNA_gpib, device_id, new_line_char='\n'):
     # rm.list_resources()   # print available gpib resource names
 
     inst = rm.open_resource(VNA_gpib)  # Connect to resource
-    inst.read_termination = new_line_char    # Let pyvisa know the device's termination character
 
-    resp = inst.query("*IDN?").rstrip(inst.read_termination) # Check device ID
+    resp = inst.query("*IDN?") # Check device ID
     print("Connected to Device ID = " + resp)
-
-    if resp != device_id:
-        inst.close()
-        inst = None
-        raise ValueError("Incorrect Device ID")
 
     return inst
 

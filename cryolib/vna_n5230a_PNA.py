@@ -5,7 +5,7 @@ __version__ = '20.03.2015_1.0'
 
 # ---- GPIB Communications Settings of this instrument >>>>
 
-VNA_gpib = "GPIB1::10::INSTR"  # Full GPIB Address of VNA
+VNA_gpib = "GPIB0::10::INSTR"  # Full GPIB Address of VNA
 VNA_device_id = "Agilent Technologies,N5230A,MY45001201,A.07.50.67"  # VNA ID String
 
 # <<<<<<
@@ -14,6 +14,7 @@ VNA_device_id = "Agilent Technologies,N5230A,MY45001201,A.07.50.67"  # VNA ID St
 
 import pyvisa
 import numpy as np
+import time
 
 import warnings
 warnings.filterwarnings('ignore', '.*VI_SUCCESS_MAX_CNT.*')
@@ -30,15 +31,8 @@ def connect(VNA_gpib, device_id, new_line_char='\n'):
     # rm.list_resources()   # print available gpib resource names
 
     inst = rm.open_resource(VNA_gpib)  # Connect to resource
-    inst.read_termination = new_line_char    # Let pyvisa know the device's termination character
-
-    resp = inst.query("*IDN?").rstrip(inst.read_termination) # Check device ID
+    resp = inst.query("*IDN?") # Check device ID
     print("Connected to Device ID = " + resp)
-
-    if resp != device_id:
-        inst.close()
-        inst = None
-        raise ValueError("Incorrect Device ID")
 
     return inst
 
@@ -51,6 +45,9 @@ def reset(inst):
     inst.write("FORMat ASCII")  # Make sure output is in ASCII
     return
 
+def power_on_off(inst, on_off):
+    inst.write('OUTPut ' + on_off)
+    return
 
 # Autoscales Y-axes on VNA
 # inst: gpib resource object
@@ -216,10 +213,6 @@ def download_complex(inst, channel="1"):
     r_data = np.asarray([float(item) for i,item in enumerate(str_data) if (i % 2) == 0]) # Pick reals: every second item in list
     c_data = np.asarray([float(item) for i,item in enumerate(str_data) if ((i - 1) % 2) == 0]) # Pick complexes: every second+1 item in list
     return np.asarray([r_data, c_data])
-
-
-
-
 # Close connection
 # inst: gpib resource object
 def terminate(inst):

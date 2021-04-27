@@ -25,20 +25,14 @@ warnings.filterwarnings('ignore', '.*VI_SUCCESS_MAX_CNT.*')
 # new_line_char: new line character for this device
 #
 # Returns gpib resource object or None if wrong device
-def connect(VNA_gpib, device_id, new_line_char='\r'):
+def connect(VNA_gpib):
     rm = pyvisa.ResourceManager() # Open visa resource manager
     # rm.list_resources()   # print available gpib resource names
 
     inst = rm.open_resource(VNA_gpib)  # Connect to resource
-    inst.read_termination = new_line_char    # Let pyvisa know the device's termination character
 
-    resp = inst.query("*IDN?").rstrip("\n") # Check device ID
+    resp = inst.query("*IDN?")
     print("Connected to Device ID = " + resp)
-
-    #if resp != device_id:
-        #inst.close()
-        #inst = None
-        #raise ValueError("Incorrect Device ID")
 
     return inst
 

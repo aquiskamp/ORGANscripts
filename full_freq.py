@@ -2,27 +2,24 @@
 
 import warnings
 import os
-
 import time
 import numpy as np
 import cryolib.general as gen
-
 import matplotlib
-matplotlib.use('TkAgg')
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
-
+from pathlib import Path as p
 from prettytable import PrettyTable
-
-
 import vna_single_sweep as vnass
 import lakeshore_temp as lakesm
+
 #import amag_ramp as amagrp
+matplotlib.use('TkAgg')
 sweep_type = "4K"
 
 # Folder To Save Files to:
-filepath = r"C:\Users\21727308\Desktop\VNA\ORGANattocube\4K_circ"
+exp_name = 'test'
+filepath = p.home()/'Desktop'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
