@@ -23,7 +23,7 @@ class ANC300():
         self.mode
         self.V
 
-        self._freq_lim = 1000 # self-imposed, 10000 is true max
+        self._freq_lim = 10000 # self-imposed, 10000 is true max
         self._step_lim = 1000000 #self-imposed, no true max
         self._V_lim = 150
         self.check_voltage()

@@ -2,6 +2,7 @@ __author__ = 'Aaron'
 
 import warnings
 import time
+import pyvisa
 import numpy as np
 import cryolib.general as gen
 import matplotlib
@@ -21,17 +22,20 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 matplotlib.use('TkAgg')
 
-anc = ANC300()
 ato_pos_start = 0
-ato_pos_end = 500000
-ato_pos_step = 2000
+ato_pos_end = 30000 #ie
+ato_pos_step = 500 #at roomtemp, 60V and f=1000Hz, step ~ 0.01deg
 up_down = 'd' # set to up, to set to down replace 'u' with 'd'
 
-setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 1250} # freq in Hz
+setVoltage = 50 # key-value pair, x is axis, '60' is voltage Volts
+setFreq = 1000 # freq in Hz
 
-anc.V = setVoltage #This sets the voltage for the sweep. 
-anc.freq = setFreq #This sets the frequency for the sweep.
+rm = pyvisa.ResourceManager()
+
+inst = rm.open_resource('ASRL3::INSTR') #usually COM3
+inst.write("setv 1 "+str(setVoltage))
+inst.write("setf 1 "+str(setFreq))
+
 # Static Temperature:
 measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
