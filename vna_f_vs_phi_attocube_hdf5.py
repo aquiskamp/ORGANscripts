@@ -15,29 +15,27 @@ from datetime import datetime
 from pytz import timezone
 import h5py
 
-#time.sleep(11*3600)
-
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 matplotlib.use('TkAgg')
 
 anc = ANC300()
 ato_pos_start = 0
-ato_pos_end = 500000
-ato_pos_step = 2000
-up_down = 'd' # set to up, to set to down replace 'u' with 'd'
+ato_pos_end = 20000
+ato_pos_step = 50
+up_down = 'u' # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 1250} # freq in Hz
+setFreq = {'x': 1000} # freq in Hz
 
 anc.V = setVoltage #This sets the voltage for the sweep. 
 anc.freq = setFreq #This sets the frequency for the sweep.
 # Static Temperature:
-measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Folder To Save Files to:
-exp_name = 'trans_r2d2_tighten_stage_down'
+exp_name = 'trans_r2d2_resolder'
 filepath = p.home()/'Desktop'/'ORGAN_15GHz'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
@@ -54,8 +52,8 @@ sweep_type = "phi_pos"
 channel = "1" #VNA Channel Number
 
 # Temperature Controller Settings
-LAKE_gpib = "GPIB2::16::INSTR"
-LAKE_device_id = "LSCI,MODEL370,370732,04102008"
+LAKE_gpib = "GPIB0::13::INSTR"
+LAKE_device_id = "LSCI,MODEL340,342638,061407"
 LAKE_channel = "8"
 
 # SCRIPT STARTS HERE
@@ -145,7 +143,7 @@ for ato_pos in ato_pos_vals:
 
         t = datetime.now(timezone('Australia/Perth')).strftime(fmt)
 
-    with h5py.File(filepath/p(exp_name + '_1_.hdf5'), 'a') as f:
+    with h5py.File(filepath/p(exp_name + '.hdf5'), 'a') as f:
         try:
             if f[str(ato_pos)]:
                 del(f[str(ato_pos)])
@@ -174,11 +172,14 @@ for ato_pos in ato_pos_vals:
         dset.attrs['ato_pos'] = ato_pos
         dset.attrs['temp'] = temperature
         dset.attrs['time'] = t
-    time.sleep(60*2)
     # print('Script is sleeping for 300 seconds')
     # if idx%5 == 0:
-    #     print('Poisitoner is sleeping for 5 mins...')
-    #     time.sleep(60*5)
+    #     with h5py.File(filepath / p(exp_name + '.hdf5'), 'r') as f:
+    #
+    #
+    #
+    # #     print('Poisitoner is sleeping for 5 mins...')
+    # #     time.sleep(60*5)
 if measure_temp:
     lakesm.disconnect() # Disconnect from Lakeshore if actively measured temperature
 
