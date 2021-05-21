@@ -15,11 +15,11 @@ import lakeshore_temp as lakesm
 
 #import amag_ramp as amagrp
 matplotlib.use('TkAgg')
-sweep_type = "4K"
+sweep_type = "cal_thru_vna"
 
 # Folder To Save Files to:
-exp_name = 'test'
-filepath = p.home()/'Desktop'/exp_name
+exp_name = 'ORGAN_DR_run_8'
+filepath = p.home()/'Desktop'/'ORGAN_15GHz'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power

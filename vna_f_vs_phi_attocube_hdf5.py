@@ -14,6 +14,9 @@ from pathlib import Path as p
 from datetime import datetime
 from pytz import timezone
 import h5py
+from attocube.ato_func import ato_hdf5_parser
+from matplotlib import cm
+from matplotlib.colors import Normalize
 
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
@@ -22,21 +25,25 @@ matplotlib.use('TkAgg')
 anc = ANC300()
 ato_pos_start = 0
 ato_pos_end = 20000
-ato_pos_step = 50
-up_down = 'u' # set to up, to set to down replace 'u' with 'd'
+ato_pos_step = 20
+up_down = 'd' # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 1000} # freq in Hz
+setFreq = {'x': 1250} # freq in
 
 anc.V = setVoltage #This sets the voltage for the sweep. 
 anc.freq = setFreq #This sets the frequency for the sweep.
 # Static Temperature:
-measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
+measure_cap = False
+cap = 0
+
+#print('The starting capacitance was %s nF' %anc.cap['x'])
 
 # Folder To Save Files to:
-exp_name = 'trans_r2d2_resolder'
-filepath = p.home()/'Desktop'/'ORGAN_15GHz'/exp_name
+exp_name = '4k_trans_cal'
+filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'ORGAN_DR_run_8'
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
@@ -60,6 +67,10 @@ LAKE_channel = "8"
 warnings.filterwarnings('ignore', '.*GUI is implemented*') # Suppress Matplotlib warning
 plt.ion()
 fig = plt.figure("VNA DOWNLOAD")
+plt.draw()
+
+plt.ion()
+fig1 = plt.figure("MODE MAP")
 plt.draw()
 
 mode_list = np.loadtxt(filepath/runfile, dtype='f8,f8,f8,i,i,f8', delimiter=',')
@@ -92,12 +103,11 @@ vnass.establish_connection()    # Establish connection to VNA
 if measure_temp:
     print("Preparing Lakeshore for active Temperature Measurement")
     lakesm.connect(LAKE_gpib, LAKE_device_id)  # Prepare lakeshore if actively measuring temperature
-    
+
 # Run over step (phi) values
 # Attocube code begins
 for ato_pos in ato_pos_vals:
     print("Set position to ato_pos = " + str(ato_pos) + " " + "Steps")
-    # print('Capacitance is: '+ str(anc.cap))
     idx = list(ato_pos_vals).index(ato_pos)
     ato_step = ato_pos_step  #ato_pos - ato_pos_vals[idx - 1]
     if ato_pos == 0 or idx == 0: #since send a 0 instructs the stage to move continuously
@@ -122,6 +132,7 @@ for ato_pos in ato_pos_vals:
 
         if measure_temp:
             temperature = lakesm.get_temp(LAKE_channel)
+       #print('Current temp is %f K' %temperature)
 
         # Processing Starts here
         freq_data = gen.get_frequency_space(fcent, fspan, npoints)  # Generate list of frequencies
@@ -130,7 +141,7 @@ for ato_pos in ato_pos_vals:
         ax = fig.add_subplot(111)
         ax.set_title("ato_pos = %.1f, f = %.3f GHz" % (ato_pos, fcent/1e9), fontsize=16)
         ax.plot(freq_data/1e9, gen.complex_to_dB(sweep_data), "g")
-        ax.set_ylabel('S21 [dB]')
+        ax.set_ylabel(r'$|S_{21}|$ [dB]')
         ax.set_xlabel('Frequency [GHz]')
         #ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%2.2e'))
         plt.axis('tight')
@@ -142,6 +153,9 @@ for ato_pos in ato_pos_vals:
             ready_data = np.vstack((ready_data, np.transpose(sweep_data)[1:]))
 
         t = datetime.now(timezone('Australia/Perth')).strftime(fmt)
+
+    if measure_cap:
+        cap = anc.cap['x']
 
     with h5py.File(filepath/p(exp_name + '.hdf5'), 'a') as f:
         try:
@@ -172,16 +186,29 @@ for ato_pos in ato_pos_vals:
         dset.attrs['ato_pos'] = ato_pos
         dset.attrs['temp'] = temperature
         dset.attrs['time'] = t
-    # print('Script is sleeping for 300 seconds')
-    # if idx%5 == 0:
-    #     with h5py.File(filepath / p(exp_name + '.hdf5'), 'r') as f:
-    #
-    #
-    #
-    # #     print('Poisitoner is sleeping for 5 mins...')
-    # #     time.sleep(60*5)
+        dset.attrs['cap'] = cap
+    # print('Capacitance is: '+ str(cap))
+    # print('Script is sleeping for 60 seconds')
+    # time.sleep(60)
+    if idx%5 == 0 and idx != 0:
+        fig1.clf()
+        ax1 = fig1.add_subplot(111)
+        mag_data_db, freq, ato_positions = ato_hdf5_parser(filepath/p(exp_name + '.hdf5'))
+        phi = ato_positions//ato_pos_step
+        colour = ax1.imshow(mag_data_db, extent=[phi[0], phi[-1], freq[0], freq[-1]],
+                            aspect=(0.8 * (phi[-1] - phi[0]) / (freq[-1] - freq[0])),
+                            cmap=plt.cm.get_cmap('viridis'), origin='lower', norm=Normalize(vmin=-70, vmax=-30))
+        ax1.set_xlabel(r'Phi (Steps)')
+        ax1.set_ylabel(r'Frequency (GHz)')
+        cb = fig1.colorbar(colour, ax=ax1, fraction=0.0325, pad=0.04)
+        cb.set_label('$|S_{21}|$ [dB]')
+        cm.ScalarMappable()
+        plt.title(exp_name)
+        plt.draw()
+
 if measure_temp:
     lakesm.disconnect() # Disconnect from Lakeshore if actively measured temperature
+
 
 print("Closing connection to Stepper Motor ", anc.close())
 
