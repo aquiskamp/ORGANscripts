@@ -5,7 +5,8 @@ __version__ = '20.03.2015_1.0'
 # THEREFORE, ONLY ONE VNA CAN BE CONNECTED TO AND CONTROLLED AT A TIME
 import time
 
-import cryolib.vna_n5230a_PNA as vna
+#import cryolib.vna_n5230a_PNA as vna
+import cryolib.vna_N5225A_VNA_usb as vna
 #import cryolib.vna_N5225A_VNA as vna
 #import cryolib.vna_E5061B_ENA as vna
 #import cryolib.vna_FFox as vna
@@ -86,6 +87,14 @@ def establish_connection():
     vna.s21_set_mode(inst, channel) # prepare for s21 measurement
     return
 
+def establish_connection_s11():
+    global inst
+    inst = vna.connect(VNA_gpib, device_id) # establish vna session
+    if inst is None:
+        exit(1)
+    vna.reset(inst) # reset vna
+    vna.s11_set_mode(inst, channel) # prepare for s11 measurement
+    return
 
 # Disconnect from vna
 def close_connection():
@@ -196,3 +205,4 @@ def sweep(params):
 
 
     return result # Finally, if all goes well - return result of vna sweep
+

@@ -5,12 +5,10 @@ __version__ = '20.03.2015_1.0'
 
 # ---- GPIB Communications Settings of this instrument >>>>
 
-VNA_gpib = "GPIB1::10::INSTR"  # Full GPIB Address of VNA
+VNA_gpib = "GPIB0::10::INSTR"  # Full GPIB Address of VNA
 VNA_device_id = "Agilent Technologies,N5230A,MY45001201,A.07.50.67"  # VNA ID String
 
 # <<<<<<
-
-
 
 import pyvisa
 import numpy as np
@@ -97,7 +95,36 @@ def s21_set_mode(inst, channel="1", window="1", trace_num="1", trace_name = "Def
 
     return
 
+def s11_set_mode(inst, channel="1", window="1", trace_num="1", trace_name = "Def_Meas", port="1"):
+    if (trace_num == "1"):
+        inst.write("DISPlay:WINDow" + window + ":TRACe1:DEL")   # Delete existing first trace on screen if we want to use it
 
+    inst.write("CALCulate" +channel + ":PARameter:DEFine:EXT '" + trace_name + "',S11") # Set channel for s21 measurement
+
+
+    #inst.write("DISPlay:WINDow" + window + ":STATE ON") # Activate window
+    inst.write("DISPlay:WINDow" + window + ":TRACe" + trace_num + ":FEED '" + trace_name + "'") # Assign trace to window
+    inst.write("DISPlay:WINDow" + window + ":TRACe" + trace_num + ":SELect")    # Show Trace
+    inst.write("DISPlay:WINDow" + window + ":TRACe" + trace_num + ":TITLe:DATA " + "'Remote Measurement S11'")  # Title Trace
+    inst.write("DISPlay:WINDow" + window + ":TRACe" + trace_num + ":TITLe:STATe ON")    # Show Trace Title
+
+    #inst.write("SENSe" + channel + ":SWEep:SPEed NORMal")  # Sweep speed normal
+    inst.write("SENSe" + channel + ":SWEep:MODE CONTinuous")   # Continuous sweep
+    inst.write("SENSe" + channel + ":SWEep:TYPE LINear")   # Linear Sweep Type
+
+    inst.write("SOURce" + channel + ":POWer" + port + ":ATTenuation:AUTO ON")
+    inst.write("SOURce" + channel + ":POWer" + port + ":MODE AUTO")    # Enable Auto attenuation of source
+
+    inst.write("CALCulate" + channel + ":PARameter:SELect '" + trace_name + "'")  # Start measurement of s21 on this channel
+    inst.write("CALCulate" + channel + ":FORMat MLOGarithmic")    # Make sure the measurement is in dBm
+
+    # Set Status register to check sweep progress
+    inst.write("STAT:QUES:INT:MEAS" + str(get_channel_int_register(channel)) + ":ENAB " +
+               str(get_channel_int_weight(channel)))
+
+    autoscale(inst, window, trace_num)  # Autoscale window to update view
+
+    return
 
 # Set source power
 # inst: gpib resource object

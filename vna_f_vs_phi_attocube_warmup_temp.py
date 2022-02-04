@@ -24,15 +24,15 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 matplotlib.use('TkAgg')
 
-db_min=-40
-db_max=-80
+db_min=-60
+db_max=-100
 
 anc = ANC300()
 ato_pos_start = 0
-ato_pos_end = 15_000
-ato_pos_step = 70
+ato_pos_end = 100_000
+ato_pos_step = 100
 total_steps = int((ato_pos_end-ato_pos_start)/ato_pos_step) + 1
-up_down = 'u' # set to up, to set to down replace 'u' with 'd'
+up_down = 'd' # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x': 1000} # freq in
@@ -44,9 +44,14 @@ measure_temp = False  # Do we actually want  to measure Temperature here (Connec
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 measure_cap = False
 cap = 0
+if measure_cap:
+    cap = anc.cap['x']
+    print('Current cap is %f uF' % cap)
+
+
 
 # Folder To Save Files to:
-exp_name = '4K_trans_run_9_r2d2'
+exp_name = '4K_RT_refl_warmup_run_3'
 filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'70mm_cavity'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
@@ -65,7 +70,7 @@ channel = "1" #VNA Channel Number
 # Temperature Controller Settings
 LAKE_gpib = "GPIB3::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
-LAKE_channel = "8"
+LAKE_channel = "A"
 
 # SCRIPT STARTS HERE
 warnings.filterwarnings('ignore', '.*GUI is implemented*') # Suppress Matplotlib warning
@@ -105,13 +110,6 @@ vnass.establish_connection()    # Establish connection to VNA
 if measure_temp:
     print("Preparing Lakeshore for active Temperature Measurement")
     lakesm.connect(LAKE_gpib, LAKE_device_id)  # Prepare lakeshore if actively measuring temperature
-    temp_meas = lakesm.get_temp(LAKE_channel)
-
-if measure_temp:
-    while temp_meas>5:
-        temp_meas = lakesm.get_temp(LAKE_channel)
-        print(f'The current temperature is {temp_meas:0.2f}K')
-        time.sleep(60)
 
 # Run over step (phi) values
 # Attocube code begins
@@ -207,6 +205,8 @@ for idx,ato_pos in enumerate(tqdm(ato_pos_vals)):
         cm.ScalarMappable()
         plt.title(exp_name)
         plt.draw()
+    if measure_temp:
+        time.sleep(60)
 
 if measure_temp:
     lakesm.disconnect() # Disconnect from Lakeshore if actively measured temperature

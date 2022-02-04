@@ -13,9 +13,12 @@ from pathlib import Path as p
 from matplotlib.backends.backend_pdf import PdfPages
 x_formatter = ScalarFormatter(useOffset=False)
 
-# plt.ion()
-# fig = plt.figure("VNA DOWNLOAD")
-# plt.draw()
+plt.ion()
+fig = plt.figure("VNA DOWNLOAD")
+plt.draw()
+def beta_scan_time(beta):
+    #factor of 8 normalizes function to beta=1 adjust scan time from beta=1
+    return 8*beta**2/(1+beta)**3
 
 def connect(gpib):
     # rm.list_resources()   # print available gpib resource names
@@ -45,7 +48,7 @@ def peakfinder(data, freq, prom, Height):
     f0 = freq[peaks[0]]# central f
     w3db = widths * bandwidth  # 3db width
     Q = f0 / w3db  # Q-estimate
-    peak_height = 10 ** np.array(peaks[1]["peak_heights"] / 20)
+    peak_height = 10 ** np.array(peaks[1]["peak_heights"] / 10)
     pheight_db = peaks[1]["peak_heights"]
 
     return f0, w3db, Q, peak_height, pheight_db
@@ -59,7 +62,7 @@ def roundup(x,rbw):
     return int(math.ceil(x /rbw )) * int(rbw)
 
 
-def Q_fit(magdata, freq_list, nlw, f0, w3db, peak_height, plot, save):
+def Q_fit(magdata, freq_list, nlw, f0, w3db, peak_height, plot, save,file_path,file_name):
 
     minpos = find_nearest_pos(freq_list, f0 - nlw * w3db)
     maxpos = find_nearest_pos(freq_list, f0 + nlw * w3db)
@@ -86,11 +89,11 @@ def Q_fit(magdata, freq_list, nlw, f0, w3db, peak_height, plot, save):
     if plot == True:
         fig.clf()
         ax = fig.add_subplot(111)
-        ax.plot(modef, 20 * np.log10(np.abs(reduced_data)), label=r'Data')
-        ax.plot(modef, 20 * np.log10(np.abs(final_fit)),
-                label="$Q_L$=" + str(round(Q)) + '\n' + "$f_0$=" + str(round(fit_pars.values['center'], 3))
-                      + ' GHz' + '\n' + '$q$=' + str(round(fit_pars.values['q'], 2)))
-        plt.ylabel('|S21| (dB)', fontsize=12)
+        ax.plot(modef, 10 * np.log10(np.abs(reduced_data)), label=r'Data')
+        ax.plot(modef, 10 * np.log10(np.abs(final_fit)),
+                label="$Q_L$=" + str(round(Q)) + '\n' + "$f_0$=" + str(round(fit_pars.values['center'], 5))
+                      + ' GHz' + '\n' + '$q$=' + str(round(fit_pars.values['q'], 3)))
+        plt.ylabel(r'$|S_{21}|$ [dB]', fontsize=12)
         plt.xlabel('Frequency (GHz)', fontsize=12)
         ax.legend()
         ax.xaxis.set_major_formatter(x_formatter)
@@ -99,10 +102,10 @@ def Q_fit(magdata, freq_list, nlw, f0, w3db, peak_height, plot, save):
         plt.draw()
         plt.pause(0.1)
     if save:
-        (p.cwd()/'Q_pdfs').mkdir(parents=True, exist_ok=True)
-        pp = PdfPages(p.cwd()/'Q_pdfs'/full_filename)
+        (file_path/'Q_pdfs').mkdir(parents=True, exist_ok=True)
+        pp = PdfPages(file_path/'Q_pdfs'/file_name)
         plt.savefig(pp, format='pdf', dpi=600)
         pp.close()
 
-    return Q, fit_pars.params['sigma'].value*1e9, 20 * np.log10(final_fit.max()), fit_pars.params['center'].value*1e9  # peak trans in dB
+    return Q, fit_pars.params['sigma'].value*1e9, 10 * np.log10(final_fit.max()), fit_pars.params['center'].value*1e9  # peak trans in dB
 

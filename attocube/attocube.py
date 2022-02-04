@@ -11,7 +11,7 @@ class ANC300():
     def __init__(self):
         
         self.tn = None
-        self.host = '130.95.156.244'
+        self.host = '130.95.156.135' #previously 244
         self.port = 7230
         
         self._freq = {}

@@ -10,8 +10,8 @@ vi_file = r'C:\Users\equslab\Desktop\Axion v3 - dev - test\Axion v3 - dev\Axion_
 
 digi_fc = 50000000
 digi_points = 26214
-digi_n_sweeps = 60
-wait_time = (2.15)*digi_n_sweeps*1000 # time before abort command is sent (in ms)
+digi_n_sweeps = 5
+wait_time = (17.179869184)*digi_n_sweeps*1000 # time before abort command is sent (in ms)
 
 #Launch labview and the VI
 LabVIEW = win32.dynamic.Dispatch('LabVIEW.Application') #need dynamic so its "late-bound oriented"

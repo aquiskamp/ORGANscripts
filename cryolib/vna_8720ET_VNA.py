@@ -5,7 +5,7 @@ __version__ = '20.03.2015_1.0'
 
 # ---- GPIB Communications Settings of this instrument >>>>
 
-VNA_gpib = "GPIB0::16::INSTR"  # Full GPIB Address of VNA
+VNA_gpib = "GPIB1::16::INSTR"  # Full GPIB Address of VNA
 VNA_device_id = "HEWLETT PACKARD,8720ET,US39172116,7.70"  # VNA ID String
 
 # <<<<<<
@@ -25,7 +25,7 @@ warnings.filterwarnings('ignore', '.*VI_SUCCESS_MAX_CNT.*')
 # new_line_char: new line character for this device
 #
 # Returns gpib resource object or None if wrong device
-def connect(VNA_gpib):
+def connect(VNA_gpib, device_id, new_line_char='\n'):
     rm = pyvisa.ResourceManager() # Open visa resource manager
     # rm.list_resources()   # print available gpib resource names
 

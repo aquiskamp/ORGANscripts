@@ -19,20 +19,24 @@ from matplotlib import cm
 from matplotlib.colors import Normalize
 from tqdm import tqdm
 from matplotlib.backends.backend_pdf import PdfPages
+from attocube.ANC350 import Positioner
 
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 matplotlib.use('TkAgg')
 
 db_min=-40
-db_max=-80
+db_max=-90
 
+axis = {'x':0,'y':1}
+anc350 = Positioner()
 anc = ANC300()
+
 ato_pos_start = 0
-ato_pos_end = 15_000
-ato_pos_step = 70
+ato_pos_end = 3000
+ato_pos_step = 20
 total_steps = int((ato_pos_end-ato_pos_start)/ato_pos_step) + 1
-up_down = 'u' # set to up, to set to down replace 'u' with 'd'
+up_down = 'd' # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x': 1000} # freq in
@@ -45,9 +49,13 @@ temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 measure_cap = False
 cap = 0
 
+initial_position = anc350.getPosition(axis['y'])
+print('Connected to',anc350.getActuatorName(axis['y']))
+print('Current Position',initial_position)
+
 # Folder To Save Files to:
-exp_name = '4K_trans_run_9_r2d2'
-filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'70mm_cavity'/exp_name
+exp_name = 'RT_refl_run_4'
+filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'Bevel_Rod'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
@@ -63,7 +71,7 @@ sweep_type = "phi_pos"
 channel = "1" #VNA Channel Number
 
 # Temperature Controller Settings
-LAKE_gpib = "GPIB3::13::INSTR"
+LAKE_gpib = "GPIB1::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
 LAKE_channel = "8"
 
@@ -105,13 +113,6 @@ vnass.establish_connection()    # Establish connection to VNA
 if measure_temp:
     print("Preparing Lakeshore for active Temperature Measurement")
     lakesm.connect(LAKE_gpib, LAKE_device_id)  # Prepare lakeshore if actively measuring temperature
-    temp_meas = lakesm.get_temp(LAKE_channel)
-
-if measure_temp:
-    while temp_meas>5:
-        temp_meas = lakesm.get_temp(LAKE_channel)
-        print(f'The current temperature is {temp_meas:0.2f}K')
-        time.sleep(60)
 
 # Run over step (phi) values
 # Attocube code begins
@@ -131,7 +132,7 @@ for idx,ato_pos in enumerate(tqdm(ato_pos_vals)):
     if measure_cap:
         cap = anc.cap['x']
     #print('Current temp is %f K' % temperature)
-
+    pos_after_step = anc350.getPosition(axis['y'])
     # Sweep over vna modes
     for mode in mode_list:
         sweep_data = vnass.sweep(mode)  # Do a sweep with these parameters
@@ -190,6 +191,7 @@ for idx,ato_pos in enumerate(tqdm(ato_pos_vals)):
             fdset.attrs['ato_step'] = ato_pos_step
             fdset.attrs['total_steps'] = total_steps
         dset.attrs['ato_pos'] = ato_pos
+        dset.attrs['ato_deg'] = pos_after_step
         dset.attrs['temp'] = temperature
         dset.attrs['time'] = t
         dset.attrs['cap'] = cap

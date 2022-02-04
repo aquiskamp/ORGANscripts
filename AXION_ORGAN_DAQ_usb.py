@@ -22,35 +22,25 @@ from pathlib import Path as p
 import vna_single_sweep as vnass
 from attocube.attocube import ANC300
 import DAQ_functions as df
-from attocube.ANC350 import Positioner
-
-anc = ANC300()
-anc350 = Positioner()
 
 fmt = "%Y_%m_%d__%H_%M_%S"
 tz = ['Australia/Perth']
-filepath = p.home()/p('Desktop/ORGAN_15GHz/ORGAN_4K_run_1a_rescan')
+filepath = p.home()/p('Desktop/ORGAN_15GHz/ORGAN_DR_run_9/ORGAN_4K_run_1a')
 measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
-use_encoder = False
 temperature = 4
-current_position = 0
 #=======================================================================================================================================
 
 #Attocube ANR300
-up_down = 'd' # set to up, to set to down replace 'u' with 'd'
-setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 1000} # freq in Hz
-anc.V = setVoltage #This sets the voltage for the sweep.
-anc.freq = setFreq #This sets the frequency for the sweep.
-
-if use_encoder:
-    initial_position = anc350.getPosition(axis['y'])
-    print('Connected to', anc350.getActuatorName(axis['y']))
-    print('Current Position', initial_position)
+anc = df.connect_usb("ASRL3::INSTR")
+up_down = 'd' # set to up. To set to down replace 'u' with 'd'
+setVoltage = 60 # Voltage in Volts
+setFreq = 1000 # Freq in Hz
+anc.write("setv 1 "+str(setVoltage))
+anc.write("setf 1 "+str(setFreq))
 
 # #Mode map
-model_freq = np.genfromtxt(filepath/'model_freq.csv',delimiter=',')
-model_phi = np.genfromtxt(filepath/'model_phi.csv',delimiter=',')
+model_freq = np.genfromtxt(filepath/'model_freq_2.csv',delimiter=',')
+model_phi = np.genfromtxt(filepath/'model_phi_2.csv',delimiter=',')
 tm010_model = PolynomialModel(4)
 y = model_phi.flatten()
 x = model_freq.flatten()
@@ -65,18 +55,18 @@ channel = "1" #VNA Channel Number
 warn_email_list = ['21727308@student.uwa.edu.au']
 vnass.set_module(channel, warn_email_list) # Reset VNA Module
 vnass.establish_connection()    # Establish connection to VNA
-sweep_type = "15.57--15.72GHz"
+sweep_type = "15.7--16.2GHz"
 
 #Initial VNA Sweep
-vna_fc = 15997312500
-vna_span = 70_000_000
-vna_ifb = 800
+vna_fc = 15_945_671_875
+vna_span = 50_000_000
+vna_ifb = 300
 vna_pts = 3201
 vna_ave = 1
 vna_pow = -10
 
 #Synthesizer settings
-SYNTH_gpib = "GPIB3::22::INSTR"  # Full GPIB Address of SYNTH
+SYNTH_gpib = "GPIB2::19::INSTR"  # Full GPIB Address of SYNTH
 synth_p = 12 #set power level (dbm) of sg
 synth_fc = 16000000000
 synth = df.connect(SYNTH_gpib)
@@ -102,12 +92,12 @@ params = [vna_fc, vna_span, vna_ifb, vna_pts, vna_ave, vna_pow]  # sweep paramet
 vna_sweep_data = vnass.sweep(params)  # data points
 
 #peakfinder settings
-pheight_db = [-60] # update every sweep?
+pheight_db = [-50] # update every sweep?
 prom = 5
 
 ato_step = 0 #start step
 max_ato_step = 200 #max step, ie don't allow an unreasonable next scan steps
-ato_list = np.array([0]) # starting position
+ato_list = np.array([18])
 
 if measure_temp:
     print("Preparing Lakeshore for active Temperature Measurement")
@@ -118,7 +108,7 @@ if measure_temp:
 while ato_step < max_ato_step:
 #=======================================================================================================================================
     #Step motor
-    print(f"Stepping motor by {ato_step} steps")
+    print("Stepping motor by " + str(ato_step) + " steps")
     if ato_step == 0: # since send a 0 instructs the stage to move continuously
         anc.stop()
         anc.ground()
@@ -126,8 +116,6 @@ while ato_step < max_ato_step:
         anc.step('x', ato_step, up_down)
         vna_fc = next_vna_fc
         ato_list = np.append(ato_list,ato_step + ato_list[-1])
-    if use_encoder:
-        current_position = anc350.getPosition(axis['y'])
 #=======================================================================================================================================
     #Sweep
     vna_span = 50_000_000
@@ -136,6 +124,7 @@ while ato_step < max_ato_step:
     vna_ave = 1
     vna_pow = -10
     vna_rbw = vna_span / (vna_pts - 1)
+
 
     #sweep VNA
     print('Sweeping VNA')
@@ -168,18 +157,16 @@ while ato_step < max_ato_step:
     fspan_stamp = "fspan=" + str(int(vna_span))
     npoints_stamp = "npoints=" + str(vna_pts)
     ato_pos_stamp = "atp_pos=" + str(ato_list[-1])
-    ato_deg_stamp = "atp_deg=" + str(current_position)
 
     filename = sweep_type
     filename += "_" + time_stamp
     filename += "_" + fcent_stamp
     filename += "_" + ato_pos_stamp
-    filename += "_" + ato_deg_stamp
 
     full_filename = p(filepath / (str(filename) + '.h5'))
 
     #Q-fit with 3 linwdwidths of data
-    Qfit, linewidth, fit_peak_db, fc_fit= df.Q_fit(mag_data**2, vna_freq_points, 1, f0[0],w3db[0], peak_height[0], True, True, filepath,filename+'.pdf')
+    Qfit, linewidth, fit_peak_db, fc_fit= df.Q_fit(mag_data**2, vna_freq_points, 1, f0[0],w3db[0], peak_height[0], True, True, filepath,filename+'.pdf') #use 3 linewdiths to fit to data (approx 9dB contrast)
 
     if up_down == 'u':
         next_vna_fc = df.roundup(f0[0] - 0.25*linewidth, vna_rbw)
@@ -195,7 +182,7 @@ while ato_step < max_ato_step:
 #=======================================================================================================================================
     # Send fc - offset to Synthesizer for IF signal to be digitized
     synth.write(":OUTP:STAT ON") #turn on rf state
-    synth_fc = fc_fit - digi_fc
+    synth_fc = f0[0] - digi_fc
     synth.write(":SOUR:FREQ:CW " + str(int(synth_fc))) #set frequnecy to synth_fc
 
 #=======================================================================================================================================
@@ -214,7 +201,6 @@ while ato_step < max_ato_step:
         dset.attrs['vna_ifb'] = vna_ifb
         dset.attrs['ato_step'] = ato_step
         dset.attrs['ato_pos'] = ato_list[-1]
-        dset.attrs['ato_deg'] = current_position
         dset.attrs['Q3db'] = Q3db
         dset.attrs['Qfit'] = Qfit
         dset.attrs['fit_peak_db'] = fit_peak_db
