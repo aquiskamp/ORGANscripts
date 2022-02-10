@@ -1,31 +1,24 @@
-__author__ = 'Aaron'
+__author__ = 'Aaron Quiskamp'
 
 import time
 import numpy as np
-from attocube.attocube import ANC300
+import pyvisa
 from tqdm import tqdm
+from attocube.attocube_usb import ANC300
 
 wait_time = 1*15 #seconds
 
-anc = ANC300()
 up_down = 'u' # set to up, to set to down replace 'u' with 'd'
+setVoltage = 60 # key-value pair, x is axis, '60' is voltage Volts
+setFreq = 1000 # freq in Hz
 
-setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 1000} # freq in
+rm = pyvisa.ResourceManager()
+#inst = rm.open_resource('COM3') #usually COM3
+inst.write('setv 1 60')
+inst.write('setf 1 1000')
+# inst.write('setm 1 stp')
+# inst.write('stepd 1 20000')
+# time.sleep(30)
+# inst.write('setm 1 gnd')
 
-anc.V = setVoltage #This sets the voltage for the sweep.
-anc.freq = setFreq #This sets the frequency for the sweep.
 
-ato_pos_end = 8000
-step_size = 400
-ato_pos_vals = np.arange(step_size,ato_pos_end,step_size)
-
-for idx,ato_pos in enumerate(tqdm(ato_pos_vals)):
-    print("Moving to ato_pos: %s (steps)" % (ato_pos))
-    if ato_pos == 0: #since send a 0 instructs the stage to move continuously
-        anc.stop()
-        anc.ground()
-    else:
-        anc.step('x', step_size, up_down)
-    print(f'Sleeping for {wait_time}s')
-    time.sleep(wait_time)

@@ -9,7 +9,7 @@ from pytz import timezone
 import h5py
 import lakeshore_temp as lakesm
 
-LAKE_gpib = "GPIB1::13::INSTR"
+LAKE_gpib = "GPIB0::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
 LAKE_channel = "A"
 lakesm.connect(LAKE_gpib, LAKE_device_id)
