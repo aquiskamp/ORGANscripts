@@ -10,7 +10,7 @@ from prettytable import PrettyTable
 from attocube.attocube import ANC300
 import vna_single_sweep as vnass
 import lakeshore_temp as lakesm
-from pathlib import Path as p
+from pathlib  importPath as p
 from datetime import datetime
 from pytz import timezone
 import h5py

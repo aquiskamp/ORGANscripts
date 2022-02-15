@@ -48,15 +48,13 @@ old_power = None
 # new_device_id: e.g.  "Agilent Technologies,N5225A,MY51451161,A.09.80.20"
 # new_channel: channel number, e.g. "1"
 # email_notif_list : list of emails in format ['me@gmail.com', 'you@yahoo.com'] to send error notifications to
-def set_module(new_channel="1", new_email_notif_list="[]"):
+def set_module(new_channel="1"):
     global VNA_gpib
     VNA_gpib = vna.VNA_gpib
     global device_id
     device_id = vna.VNA_device_id
     global channel
     channel = new_channel
-    global email_notif_list
-    email_notif_list = new_email_notif_list
 
     global inst
     inst = None

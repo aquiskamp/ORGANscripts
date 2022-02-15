@@ -14,7 +14,7 @@ LAKE_device_id = "LSCI,MODEL340,342638,061407"
 LAKE_channel = "A"
 lakesm.connect(LAKE_gpib, LAKE_device_id)
 
-wait_time = 60
+wait_time = 300
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 #temp_meas = lakesm.get_temp(LAKE_channel)
