@@ -4,46 +4,25 @@ import warnings
 import time
 import numpy as np
 import cryolib.general as gen
-import matplotlib
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
-from attocube.attocube import ANC300
+from attocube.attocube_usb import ANC300
 import vna_single_sweep as vnass
 import lakeshore_temp as lakesm
 from pathlib  importPath as p
 from datetime import datetime
 from pytz import timezone
 import h5py
-import pyvisa
 from attocube.ato_func import ato_hdf5_parser
 from matplotlib import cm
 from matplotlib.colors import Normalize
 from tqdm import tqdm
 from matplotlib.backends.backend_pdf import PdfPages
-from attocube.ANC350 import Positioner
 
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 matplotlib.use('TkAgg')
-
-ato_start = 0
-ato_end = 15_000
-ato_step = 15
-total_steps = int((ato_end-ato_start)/ato_step) + 1
-up_down = 'u' # set to up, to set to down replace 'u' with 'd'
-
-setVoltage = 6 # key-value pair, x is axis, '60' is voltage Volts
-setFreq = 1000 # freq in Hz
-
-rm = pyvisa.ResourceManager()
-
-inst = rm.open_resource('ASRL3::INSTR') #usually COM3
-inst.write("setv 1 "+str(setVoltage))
-inst.write("setf 1 "+str(setFreq))
-
-# Static Temperature:
-measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
-temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
+anc = ANC300()
 
 # Folder To Save Files to:
 exp_name = 'coupling_after_rescan_DR3'
@@ -53,14 +32,23 @@ filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'ORGAN_4K_run_1a_rescan'/exp_name
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = p('run1.csv')
 
-# Send error notifications to email addresses:
-warn_email_list = ['21727308@student.uwa.edu.au']
+ato_start = 0
+ato_end = 15_000
+ato_step = 15
+total_steps = int((ato_end-ato_start)/ato_step) + 1
+up_down = 'u' # set to up, to set to down replace 'u' with 'd'
 
-# Other Settings:
-sweep_type = "phi_pos"
+setVoltage = 60 # key-value pair, x is axis, '60' is voltage Volts
+setFreq = 1000 # freq in Hz
 
-# Additional VNA Settings
-channel = "1" #VNA Channel Number
+setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
+setFreq = {'x': 1000} # freq in
+anc.V = setVoltage #This sets the voltage for the sweep.
+anc.freq = setFreq #This sets the frequency for the sweep.
+
+# Static Temperature:
+measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings
 LAKE_gpib = "GPIB2::16::INSTR"
@@ -81,7 +69,6 @@ mode_list = np.loadtxt(filepath/runfile, dtype='f8,f8,f8,i,i,f8', delimiter=',')
 if np.size(mode_list) == 1: # In case we have only one mode
     mode_list = np.asarray([mode_list])
 
-
 # Plotting mode measurement settings as a nice table:
 dat_dtype = {
     'names': ('Fcent (Hz)', 'Fspan (Hz)', 'BW (Hz)', 'NPoints', 'NAverages', 'Power (dBm)'),
@@ -100,7 +87,7 @@ ato_pos_vals = np.arange(ato_start, ato_end + ato_step, ato_step)
 
 print("Running Sweep over Phi = [%s,%s] Steps, with %s step size (%s sweeps)"%(ato_start,ato_end,ato_step,total_steps))
 
-vnass.set_module(channel, warn_email_list) # Reset VNA Module
+vnass.set_module() # Reset VNA Module
 vnass.establish_connection()    # Establish connection to VNA
 
 if measure_temp:
@@ -183,10 +170,6 @@ for idx,ato_pos in enumerate(tqdm(ato_pos_vals)):
         dset.attrs['ato_pos'] = ato_pos
         dset.attrs['temp'] = temperature
         dset.attrs['time'] = t
-    # print('Script is sleeping for 300 seconds')
-    # if idx%5 == 0:
-    #     print('Poisitoner is sleeping for 5 mins...')
-    #     time.sleep(60*5)
 
     if idx%5 == 0 and idx != 0:
         fig1.clf()

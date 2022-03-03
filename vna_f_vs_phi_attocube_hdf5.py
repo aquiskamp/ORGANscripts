@@ -36,9 +36,9 @@ up_down = 'u' # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x': 1000} # freq in
-
 anc.V = setVoltage #This sets the voltage for the sweep. 
 anc.freq = setFreq #This sets the frequency for the sweep.
+
 # Static Temperature:
 measure_temp = False  # Do we actually want  to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)

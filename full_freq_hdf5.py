@@ -1,13 +1,10 @@
 # THIS SCRIPTS INITIATES A frequency Sweep Using Agilent VNA and saves to HDF5
 
 import warnings
-import os
 import time
 import numpy as np
 import cryolib.general as gen
-import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
 from pathlib import Path as p
 from prettytable import PrettyTable
 import vna_single_sweep as vnass
@@ -18,10 +15,6 @@ import h5py
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
-#import amag_ramp as amagrp
-matplotlib.use('TkAgg')
-sweep_type = "calibration"
-
 # Folder To Save Files to:
 exp_name = 'coupling_after_rescan_DR3'
 filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'ORGAN_4K_run_1a_rescan'/exp_name
@@ -29,10 +22,6 @@ filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'ORGAN_4K_run_1a_rescan'/exp_name
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
-
-# Send error notifications to email addresses:
-warn_email_list = ['aaron.quiskamp@uwa.edu.au']
-channel = "1"
 
 warnings.filterwarnings('ignore', '.*GUI is implemented*') # Suppress Matplotlib warning
 
@@ -57,7 +46,7 @@ for row in mode_list:
 print("Loaded Settings:")
 print(table_data)
 
-vnass.set_module(channel, warn_email_list) # Reset VNA Module
+vnass.set_module() # Reset VNA Module
 vnass.establish_connection()    # Establish connection to VNA
 
 for mode in mode_list:
@@ -91,11 +80,10 @@ for mode in mode_list:
 with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
 
     full_freq = np.linspace(mode_list[0][0] - fspan // 2, fcent + fspan // 2, ready_data.shape[0])  # freq list in Hz
-    dset = f.create_dataset('VNA', data=ready_data, compression='gzip', compression_opts=9)  # VNA dset
-    fdset = f.create_dataset('Freq', data=full_freq, compression='gzip', compression_opts=9)
+    dset = f.create_dataset('VNA', data=ready_data, compression='gzip', compression_opts=6)  # VNA dset
+    fdset = f.create_dataset('Freq', data=full_freq, compression='gzip', compression_opts=6)
     fdset.attrs['f_start'] = mode_list[0][0]  # this is from the mode map / next freq
     fdset.attrs['f_final'] = fcent
-    fdset.attrs['sweep_type'] = sweep_type
     fdset.attrs['vna_pow'] = power
     fdset.attrs['vna_span'] = fspan
     fdset.attrs['vna_pts'] = npoints
