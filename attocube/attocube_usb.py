@@ -11,6 +11,14 @@ class ANC300():
     
     def __init__(self):
         self.host = 'COM3' #usb address
+        self._freq = {}
+        self._mode = {}
+        self._V = {}
+        self._cap = {}
+
+        self.freq
+        self.mode
+        self.V
 
     def connect(self):
             rm = pyvisa.ResourceManager()
@@ -37,14 +45,15 @@ class ANC300():
             self.send('setv %i %i' %(self._stages.index(key)+1, value)) # e.g. setf 1 10 to set x axis to 10 V
 
     def cap(self):
-        self.mode = {'x':'cap'}
+        self.mode({'x':'cap'})
         for i in range(1):
             self.send('capw %i' %(i+1)) # wait for capacitance measurement to finish
             msg = self.send('getc %i' %(i+1))
+            self._cap[self._stages[i]] = self._getValue(msg)
         return msg
 
     def ground(self):
-        self.mode = {'x':'gnd'}
+        self.mode({'x':'gnd'})
 
     def step(self, axis, numsteps, updown):
         """ steps up for number of steps given; if None, ignored; if 0, continuous"""
@@ -52,7 +61,7 @@ class ANC300():
         if updown not in ['u','d']:
             raise Exception('What doesn\'t come up must come down!')
 
-        self.mode = {axis: 'stp'}
+        self.mode({axis: 'stp'})
 
         if numsteps == 0:
             raise Exception('That won\'t get you anywhere!')
@@ -60,7 +69,7 @@ class ANC300():
         else:
             self.send('step%s %i %i' %(updown, self._stages.index(axis)+1, numsteps))
             self.send('stepw %i' %(self._stages.index(axis)+1)) # waits until motion has ended to run next command; Attocube.stop will stop motion no matter what
-        self.mode = {axis: 'gnd'}
+        self.mode({axis: 'gnd'})
 
     def stop(self):
         for i in range(1):
@@ -72,5 +81,10 @@ class ANC300():
             self.inst.write(cmd)
         except:
             print("Could not connect to ANC300 Attocube Controller!")
+
+    def _getValue(self, msg):
+        """ Looks after equals sign in returned message to get value of parameter """
+        while True:
+            print(self.inst.read_bytes(10))#.split()[msg.split().index(b'=')+1].decode('utf-8') #looks after the equal sign
 
 

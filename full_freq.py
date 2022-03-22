@@ -15,21 +15,15 @@ import lakeshore_temp as lakesm
 
 #import amag_ramp as amagrp
 matplotlib.use('TkAgg')
-sweep_type = "cal_thru_vna"
+sweep_type = "sweep"
 
 # Folder To Save Files to:
-exp_name = 'ORGAN_DR_run_8'
-filepath = p.home()/'Desktop'/'ORGAN_15GHz'/exp_name
+exp_name = 'TiNb_mk'
+filepath = p.home()/'Desktop'/'Elrina'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
-runfile = r"run1.csv"
-
-# Send error notifications to email addresses:
-warn_email_list = ['aaron.quiskamp@uwa.edu.au']
-
-
-channel = "1"
+runfile = r"modes.csv"
 
 warnings.filterwarnings('ignore', '.*GUI is implemented*') # Suppress Matplotlib warning
 filepath = os.path.normpath(filepath)  # Convert pathname to look like a normal pathname for this OS
@@ -57,7 +51,7 @@ for row in mode_list:
 print("Loaded Settings:")
 print(table_data)
 
-vnass.set_module(channel, warn_email_list) # Reset VNA Module
+vnass.set_module() # Reset VNA Module
 vnass.establish_connection()    # Establish connection to VNA
 
 mnum = 0

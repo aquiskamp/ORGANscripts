@@ -1,4 +1,4 @@
-# THIS SCRIPTS INITIATES A frequency Sweep Using Agilent VNA and saves to HDF5
+__author__ = 'Aaron'
 
 import warnings
 import time
@@ -11,17 +11,18 @@ import vna_single_sweep as vnass
 from datetime import datetime
 from pytz import timezone
 import h5py
+from tqdm import tqdm
 
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
 # Folder To Save Files to:
-exp_name = 'coupling_after_rescan_DR3'
-filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'ORGAN_4K_run_1a_rescan'/exp_name
+exp_name = 'TiNb_mK'
+filepath = p.home()/'Desktop'/'Elrina'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
-runfile = filepath/'run1.csv'
+runfile = filepath/'modes.csv'
 
 warnings.filterwarnings('ignore', '.*GUI is implemented*') # Suppress Matplotlib warning
 
@@ -49,7 +50,7 @@ print(table_data)
 vnass.set_module() # Reset VNA Module
 vnass.establish_connection()    # Establish connection to VNA
 
-for mode in mode_list:
+for mode in tqdm(mode_list):
     sweep_data = vnass.sweep(mode)  # Do a sweep with these parameters
     fcent = mode[0]
     fspan = mode[1]
