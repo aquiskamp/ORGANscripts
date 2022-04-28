@@ -9,6 +9,7 @@ import cryolib.general as gen
 from pathlib import Path as p
 import h5py
 from datetime import datetime
+from pytz import timezone
 
 #variables
 
@@ -53,7 +54,7 @@ def gather_data(params, writefile):
 
     if writefile == True:
 
-        t = datetime.now(timezone('Australia/Perth')).strftime(fmt)
+        t = datetime.now(timezone('Australia/Perth')).strftime("%Y_%m_%d %H_%M_%S")
         time_stamp = "time=%s" % t
         filepath = p.home()
         filename ="vna_antennacoupling" + fcent + "_" + time_stamp
@@ -65,6 +66,19 @@ def gather_data(params, writefile):
             full_freq = np.linspace(fcent - fspan // 2, fcent + fspan // 2,ready_data.shape[0])  # freq list in Hz
             dset = f.create_dataset('VNA', data=ready_data, compression='gzip', compression_opts=6)  # VNA dset
             fdset = f.create_dataset('Freq', data=full_freq, compression='gzip', compression_opts=6)
+            fdset.attrs['f_final'] = fcent
+            fdset.attrs['vna_pow'] = power
+            fdset.attrs['vna_span'] = fspan
+            fdset.attrs['vna_pts'] = npoints
+            fdset.attrs['vna_ave'] = average
+            fdset.attrs['vna_rbw'] = fspan / (npoints - 1)
+            fdset.attrs['vna_ifb'] = bandwidth
+            # fdset.attrs['nmodes'] = mode_list.shape[0]
+            fdset.attrs['time'] = t
+
+        print('SWEEP FINISHED')
+
+
 
 
 
