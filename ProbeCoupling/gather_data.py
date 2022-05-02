@@ -56,6 +56,7 @@ def gather_data(params, writefile):
     db_data = gen.complex_to_dB(sweep_data)
     ready_data = np.transpose(sweep_data)
 
+    #maybe do a find dips and resweep to centre graph more accurately
     fcent, fspan, bandwidth, npoints, power, average = params
     freq_data = gen.get_frequency_space(fcent, fspan, npoints)
 
