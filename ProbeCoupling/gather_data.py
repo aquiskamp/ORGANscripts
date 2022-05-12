@@ -49,16 +49,29 @@ def gather_data(params, writefile):
     #    params = input_popup()                                                                                         #gather VNA sweep parameters
     channel = "1"  # VNA Channel number
     warn_email_list = ['22496421@student.uwa.edu.au']
-    vnass.set_module(channel)
+    vnass.set_module(channel)                       #do i need channel?
     vnass.establish_connection()  # establish connection to vna
 
     sweep_data = vnass.sweep(params)  # Do a sweep with these parameters
     db_data = gen.complex_to_dB(sweep_data)
     ready_data = np.transpose(sweep_data)
 
-    #maybe do a find dips and resweep to centre graph more accurately
     fcent, fspan, bandwidth, npoints, power, average = params
     freq_data = gen.get_frequency_space(fcent, fspan, npoints)
+
+    # find actual resonant frequency and how far off initial sweep was
+    dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=30, prom=2, Height=20)  # get frequency of dip
+    dip_difference = (abs(f0 - fcent) / fspan) * 100
+
+   #if the difference is larger than 3%, resweep and reduce span to increase resolution
+    if dip_difference > 3:
+
+        params[0] = f0
+        params[1] = int(fspan/2)                        #idk if you need to typecast
+
+        sweep_data = vnass.sweep(params)  # Do a sweep with these parameters
+        db_data = gen.complex_to_dB(sweep_data)
+        ready_data = np.transpose(sweep_data)
 
     if writefile:
         t = datetime.now(timezone('Australia/Perth')).strftime("%Y_%m_%d %H_%M_%S")
@@ -135,3 +148,7 @@ def present_data(db_data, freq_data, fcent, fspan):
 
     plt.text(10, 10, txt)
     plt.show()
+
+def fit_data(f_data, z_data):
+    port1 = circuit.reflection_port(f_data, z_data)
+    port1.plotrawdata()
