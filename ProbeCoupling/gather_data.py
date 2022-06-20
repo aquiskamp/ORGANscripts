@@ -12,6 +12,7 @@ from datetime import datetime
 from pytz import timezone
 import matplotlib.pyplot as plt
 import Antenna_motor.coupling_functions as cf
+import resonator_tools.circuit as circuit
 
 
 # variables
@@ -19,13 +20,17 @@ import Antenna_motor.coupling_functions as cf
 # Generates popup box for user inputs
 # Input Prompts: "Centre Frequency (Hz)", "Frequency Span (Hz)", "Bandwidth (Hz)",
 # "No. Points", "No. Averages", "Power (dBm)"
-def input_popup():
+# Param boolean default inserts default parameters instead of user input.
+def input_popup(default):
     text = "Enter the following details:"
     title = "VNA Sweep Parameters"
     input_list = ["Centre Frequency (Hz)", "Frequency Span (Hz)", "Bandwidth (Hz)", "No. Points", "No. Averages",
                   "Power (dBm)"]
-    output = multenterbox(text, title, input_list)
-    param = np.array(output)
+    if default is True:
+        param = np.array([7130000000, 100000000, 300, 1601, 1, 0])
+    else:
+        output = multenterbox(text, title, input_list)
+        param = np.array(output)
     # message = "Entered details are in form of list :" + str(output)
     # msg = msgbox(message, title)
 
@@ -49,16 +54,28 @@ def gather_data(params, writefile):
     #    params = input_popup()                                                                                         #gather VNA sweep parameters
     channel = "1"  # VNA Channel number
     warn_email_list = ['22496421@student.uwa.edu.au']
-    vnass.set_module(channel)
+    vnass.set_module(channel)  # do i need channel?
     vnass.establish_connection()  # establish connection to vna
 
     sweep_data = vnass.sweep(params)  # Do a sweep with these parameters
     db_data = gen.complex_to_dB(sweep_data)
     ready_data = np.transpose(sweep_data)
 
-    #maybe do a find dips and resweep to centre graph more accurately
     fcent, fspan, bandwidth, npoints, power, average = params
     freq_data = gen.get_frequency_space(fcent, fspan, npoints)
+
+    # find actual resonant frequency and how far off initial sweep was
+    dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=30, prom=2, Height=20)  # get frequency of dip
+    dip_difference = (abs(f0 - fcent) / fspan) * 100
+
+    # if the difference is larger than 3%, resweep and reduce span to increase resolution
+    if dip_difference > 3:
+        params[0] = f0
+        params[1] = int(fspan / 2)  # idk if you need to typecast
+
+        sweep_data = vnass.sweep(params)  # Do a sweep with these parameters
+        db_data = gen.complex_to_dB(sweep_data)
+        ready_data = np.transpose(sweep_data)
 
     if writefile:
         t = datetime.now(timezone('Australia/Perth')).strftime("%Y_%m_%d %H_%M_%S")
@@ -93,7 +110,8 @@ def print_h5_struct(name, obj):
     elif isinstance(obj, h5py.Group):
         print('Group:', name)
 
-#reads
+
+# reads
 def read_h5_file(filename):
     with h5py.File(filename, 'r') as f:  # file will be closed when we exit from WITH scope
         f.visititems(print_h5_struct)  # print all strustures names
@@ -101,6 +119,7 @@ def read_h5_file(filename):
         vna = f['VNA'][()]  # remember this is still complex
         vna_transpose = np.transpose(vna)
         freq_dataset = f['Freq']
+        # vna_dataset = list(f['VNA'])
         fcent = freq_dataset.attrs['f_final']
         power = freq_dataset.attrs['vna_pow']
         fspan = freq_dataset.attrs['vna_span']
@@ -127,11 +146,54 @@ def present_data(db_data, freq_data, fcent, fspan):
     plt.xlabel('Frequency (GHz)')
     plt.title("f = %.3f GHz" % (fcent / 1e9), fontsize=16)
 
-
     dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=30, prom=2, Height=20)  # get frequency of dip
     dip_difference = (abs(f0 - fcent) / fspan) * 100
-    txt = "Dip frequency (GHz): %.3f\n Centre Frequency (GHz) : %.3f \n Percentage difference : %d%%\n" % (f0, fcent, dip_difference)
+    txt = "Dip frequency (GHz): %.3f\n Centre Frequency (GHz) : %.3f \n Percentage difference : %d%%\n" % (
+    f0, fcent, dip_difference)
     print(txt)
 
     plt.text(10, 10, txt)
     plt.show()
+
+
+def fit_data(f_data, z_data, db_data, fcent, fspan):
+
+    # find desired span
+    port1 = circuit.reflection_port(f_data, z_data)
+    port1.autofit()
+    desiredspan = 4*(port1.fitresults['fr']/port1.fitresults['Ql'])
+
+    # find percentage difference and then centre and fit to desired span
+    dips, f0, dips_dict = cf.dipfinder(db_data, f_data, p_width=30, prom=2, Height=20)
+    dip_difference = float(((f0 - fcent) / fspan) * 100)
+    # print("dip difference =", dip_difference, "f0 index = ", dips[0])
+
+    if dip_difference > 0:
+        newspanlen = len(f_data[dips[0]:]) - 1
+        if desiredspan < fspan:
+            newspanlen = int(newspanlen*(desiredspan/fspan))
+        min = dips[0]-newspanlen
+        max = dips[0]+newspanlen
+        f_data = f_data[min:max]
+        z_data = z_data[min:max]
+        print("new length of f_Data = ", len(f_data))
+    else:
+        newspanlen = len(f_data[:dips[0]]) - 1
+        if desiredspan < fspan:
+            newspanlen = int(newspanlen*(desiredspan/fspan))
+
+        f_data = f_data[dips[0] - newspanlen:dips[0] + newspanlen]
+        z_data = z_data[dips[0] - newspanlen:dips[0] + newspanlen]
+
+    port2 = circuit.reflection_port(f_data, z_data)
+
+    # delays = np.linspace(0,60,30)
+    # for i in delays:
+    #     port1.autofit(electric_delay=i, fr_guess=f0)
+
+    # port1.plotrawdata()
+
+    port2.autofit()
+    port2.plotall()
+    print("Fit results:", port2.fitresults)
+    print("Fit results PORT1:", port1.fitresults)
