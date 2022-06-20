@@ -70,6 +70,7 @@ for mode in tqdm(mode_list):
     ax.set_xlabel('Frequency [GHz]')
     plt.axis('tight')
     plt.draw()
+    plt.pause(0.1)
 
     if list(mode_list).index(mode) == 0:
         ready_data = np.transpose(sweep_data)

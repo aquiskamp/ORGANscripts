@@ -61,11 +61,11 @@ def autoscale(inst, window="1", trace_num="1"):
 # window (optional): window number, eg "1", default value = "1"
 # trace_num (optional): trace number, eg "1", default value = "1"
 # trace_name (optional): trace name, eg "My_Trace", default value = "Def_Meas"
-def s21_set_mode(inst, channel="1", window="1", trace_num="1", trace_name = "Def_Meas", port="1"):
+def set_mode(inst, channel="1", window="1", trace_num="1", trace_name = "Def_Meas", port="1", mode="S21"):
     if (trace_num == "1"):
         inst.write("DISPlay:WINDow" + window + ":TRACe1:DEL")   # Delete existing first trace on screen if we want to use it
 
-    inst.write("CALCulate" +channel + ":PARameter:DEFine:EXT '" + trace_name + "',S21") # Set channel for s21 measurement
+    inst.write("CALCulate" +channel + ":PARameter:DEFine:EXT '" + trace_name + "'," + mode) # Set channel for s21 measurement
 
     inst.write("DISPlay:WINDow" + window + ":STATE ON") # Activate window
     inst.write("DISPlay:WINDow" + window + ":TRACe" + trace_num + ":FEED '" + trace_name + "'") # Assign trace to window
@@ -90,7 +90,6 @@ def s21_set_mode(inst, channel="1", window="1", trace_num="1", trace_name = "Def
     autoscale(inst, window, trace_num)  # Autoscale window to update view
 
     return
-
 
 
 # Set source power

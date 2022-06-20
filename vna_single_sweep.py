@@ -13,8 +13,6 @@ import cryolib.vna_N5225A_VNA as vna
 #import cryolib.vna_8720ET_VNA as vna
 
 import pyvisa # important for catching of visa errors
-import cryolib.email_notification as emailnotif # import email notification module
-
 import warnings
 import matplotlib.pyplot as plt
 
@@ -26,13 +24,11 @@ import matplotlib.pyplot as plt
 # "point" for point-after-point)
 averaging_mode="sweep"
 
-
 # Other stuff from here
 
 VNA_gpib = ""
 device_id = ""
 channel = ""
-email_notif_list="[]"
 
 # Local Variables
 inst = None
@@ -76,18 +72,11 @@ def set_module(new_channel="1"):
 
 # Functions
 # Connect to vna
-def establish_connection():
+def establish_connection(mode="S21"):
     global inst
     inst = vna.connect(VNA_gpib, device_id) # establish vna session
     vna.reset(inst) # reset vna
-    vna.s21_set_mode(inst, channel) # prepare for s21 measurement
-    return
-
-def establish_connection_s11():
-    global inst
-    inst = vna.connect(VNA_gpib, device_id) # establish vna session
-    vna.reset(inst) # reset vna
-    vna.s21_set_mode(inst, channel) # prepare for s11 measurement
+    vna.set_mode(inst, channel, mode) # prepare for s21 measurement
     return
 
 def establish_connection_uphase():
