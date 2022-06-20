@@ -8,14 +8,15 @@ import cryolib.general as gen
 from Antenna_motor.coupling_functions import *
 
 vnass.set_module()  # Reset VNA Module
-vnass.establish_connection_uphase()  # Establish connection to VNA
+vnass.establish_connection()  # Establish connection to VNA
 
 #fcent,fspan,bandwidth,npoints,power,average
 mode_params = np.array([[7160000000,60000000,300,1601,1,0]])
 
 # Sweep over vna modes
 for mode in mode_params:
-    sweep_data = vnass.sweep_formatted(mode)  # Do a sweep with these parameters
+    sweep_data = vnass.sweep(mode)  # Do a sweep with these parameters
+
     fcent,fspan,bandwidth,npoints,power,average = mode
 
     # Processing Starts here

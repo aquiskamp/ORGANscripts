@@ -1,5 +1,7 @@
 __author__ = 'Aaron'
 
+''''Script for stepping motor then waiting some time on warmup/cooldowm'''
+
 import warnings
 import time
 import numpy as np
@@ -22,10 +24,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 anc = ANC300()
-delay_start = False
-delay = 10*3600
-wait_for_temp = True
-wait_temp = 4
+wait = True
+wait_time = 5*60
 
 db_min = -50
 db_max = -100
@@ -43,7 +43,6 @@ ato_end = 100_000
 ato_step = 200
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
-
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x': 1000} # freq in
@@ -100,15 +99,8 @@ if measure_temp:
     print("Preparing Lakeshore for active Temperature Measurement")
     lakesm.connect(LAKE_gpib, LAKE_device_id)  # Prepare lakeshore if actively measuring temperature
     temperature = lakesm.get_temp(LAKE_channel)
-if delay_start:
-    print(f'Sleeping script for {delay/3600} hrs')
-    time.sleep(delay)
-elif wait_for_temp:
-    print(f'Start script when temp is below {wait_temp}K')
-    while temperature > wait_temp:
-        print(f'Temp is too high, T={temperature}K')
-        temperature = lakesm.get_temp(LAKE_channel)
-        time.sleep(5*60)
+    print(f'Current temp is T={temperature}K')
+
 
 # Run over step (phi) values
 # Attocube code begins
@@ -133,6 +125,7 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
 
         if measure_temp:
             temperature = lakesm.get_temp(LAKE_channel)
+            print(f'Current temp is T={temperature}K')
 
         # Processing Starts here
         freq_data = gen.get_frequency_space(fcent, fspan, npoints)  # Generate list of frequencies
@@ -184,6 +177,9 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
         dset.attrs['ato_pos'] = ato_pos
         dset.attrs['temp'] = temperature
         dset.attrs['time'] = t
+    if wait:
+        print(f'Sleeping script for {wait_time/60} mins')
+        time.sleep(wait_time)
 
     if idx % 5 == 0 and idx != 0:
         fig1.clf()

@@ -6,8 +6,8 @@ __version__ = '20.03.2015_1.0'
 import time
 
 #import cryolib.vna_n5230a_PNA as vna
-import cryolib.vna_N5225A_VNA_usb as vna
-#import cryolib.vna_N5225A_VNA as vna
+#import cryolib.vna_N5225A_VNA_usb as vna
+import cryolib.vna_N5225A_VNA as vna
 #import cryolib.vna_E5061B_ENA as vna
 #import cryolib.vna_FFox as vna
 #import cryolib.vna_8720ET_VNA as vna
@@ -79,8 +79,6 @@ def set_module(new_channel="1"):
 def establish_connection():
     global inst
     inst = vna.connect(VNA_gpib, device_id) # establish vna session
-    if inst is None:
-        exit(1)
     vna.reset(inst) # reset vna
     vna.s21_set_mode(inst, channel) # prepare for s21 measurement
     return
@@ -88,10 +86,15 @@ def establish_connection():
 def establish_connection_s11():
     global inst
     inst = vna.connect(VNA_gpib, device_id) # establish vna session
-    if inst is None:
-        exit(1)
     vna.reset(inst) # reset vna
-    vna.s11_set_mode(inst, channel) # prepare for s11 measurement
+    vna.s21_set_mode(inst, channel) # prepare for s11 measurement
+    return
+
+def establish_connection_uphase():
+    global inst
+    inst = vna.connect(VNA_gpib, device_id) # establish vna session
+    vna.reset(inst) # reset vna
+    vna.set_unformatted_phase(inst, channel) # prepare for s11 measurement
     return
 
 # Disconnect from vna
@@ -153,11 +156,89 @@ def sweep(params):
                 vna.set_averaging(inst, naverages, averaging_mode, channel)  # Set number of averages
                 old_naverages = naverages
 
+            sweep_time = vna.get_sweep_time(inst, channel)
+            if averaging_mode == "sweep":
+                sweep_time = sweep_time * naverages*1 + 1.5# If the mode is "sweep", need to account for multiple sweeps
+            print("Freq = %2.2e Hz > Sweep Time = %.1f secs" % (fcent, round(sweep_time, 1)))
+
+            if (sweep_time > 2.0):
+                time_step = sweep_time/10
+            else:
+                time_step = sweep_time
+
+            t = 0.0;
+
+            while (t < sweep_time):
+                vna.autoscale(inst) # Autoscale View
+                percentage = int(t / sweep_time * 100.0)
+                print(percentage)
+                print('Progress: [%d%%]\r' % percentage, end="")
+
+                if float(t) > (sweep_time + time_step):
+                    warnings.warn("Sweep time exceeded, waiting!..")
+
+                time.sleep(time_step)
+                t += time_step
+            result = vna.download_complex(inst, channel)  # download complex values
+            print("Sweep Complete (" + str(int(result.size / 2)) + " points)")
+
+
+        except pyvisa.errors.VisaIOError as e:
+            warnings.warn("VNA GPIB VisaIOError")
+            print('VNA Comm Failed! Err: ', str(e), 'Waiting to flush visa')
+            plt.pause(10) # Wait for 10 seconds for vna to catch up?
+
+        else:
+            break
+    else:
+        print('Communication with VNA Aborted -> Send Warning email') # we failed all the attempts - deal with the consequences.
+        emailnotif.send_email(email_notif_list)
+        raise ValueError("VNA Communication Failure")
+        exit(-1)
+
+
+    return result # Finally, if all goes well - return result of vna sweep
+
+def sweep_formatted(params):
+    fcent = params[0]
+    fspan = params[1]
+    bandwidth = params[2]
+    npoints = params[3]
+    naverages = params[4]
+    power = params[5]
+
+    for attempt in range(15): # Try communication/measurement with vna 5 times, before giving up
+        try:
+            global old_power
+            if old_power != power:
+                vna.set_source_power(inst, power, channel) # Set source power
+                old_power = power
+            global old_npoints
+            if old_npoints != npoints:
+                vna.set_point_number(inst, npoints, channel) # Set Number of Points Per Span
+                old_npoints = npoints
+            global old_bandwidth
+            if old_bandwidth != bandwidth:
+                vna.set_bandwidth(inst, bandwidth, channel) # Set Bandwidth
+                old_bandwidth = bandwidth
+            global old_fcent
+            if old_fcent != fcent:
+                vna.set_fcentral(inst, fcent, channel) # Set Fcent
+                old_fcent = fcent
+            global old_fspan
+            if old_fspan != fspan:
+                vna.set_fspan(inst, fspan, channel) # Set Fspan
+                old_fspan = fspan
+            global old_naverages
+            if old_naverages != naverages:
+                vna.set_averaging(inst, naverages, averaging_mode, channel)  # Set number of averages
+                old_naverages = naverages
+
 
 
             sweep_time = vna.get_sweep_time(inst, channel)
             if averaging_mode == "sweep":
-                sweep_time = sweep_time * naverages*1 + 1# If the mode is "sweep", need to account for multiple sweeps
+                sweep_time = sweep_time * naverages*1 + 1.5# If the mode is "sweep", need to account for multiple sweeps
             #sweep_time=299
             print("Freq = %2.2e Hz > Sweep Time = %.1f secs" % (fcent, round(sweep_time, 1)))
 
@@ -178,13 +259,10 @@ def sweep(params):
                 if float(t) > (sweep_time + time_step):
                     warnings.warn("Sweep time exceeded, waiting!..")
 
-                plt.pause(time_step)  # Sleep for a time_step
-                #time.sleep(time_step)
+                time.sleep(time_step)
                 t += time_step
-
-
-            result = vna.download_complex(inst, channel)  # download complex values
-
+            plt.pause(0.1)
+            result = vna.download_formatted(inst, channel)  # download complex values
             print("Sweep Complete (" + str(int(result.size / 2)) + " points)")
 
 
@@ -203,4 +281,3 @@ def sweep(params):
 
 
     return result # Finally, if all goes well - return result of vna sweep
-

@@ -10,7 +10,7 @@ class ANC300():
     _modes = ['gnd','cap','stp']
     
     def __init__(self):
-        self.host = 'COM3' #usb address
+        self.host = 'ASRL4::INSTR' #usb address
         self._freq = {}
         self._mode = {}
         self._V = {}
@@ -46,11 +46,16 @@ class ANC300():
 
     def cap(self):
         self.mode({'x':'cap'})
-        for i in range(1):
-            self.send('capw %i' %(i+1)) # wait for capacitance measurement to finish
-            msg = self.send('getc %i' %(i+1))
-            self._cap[self._stages[i]] = self._getValue(msg)
-        return msg
+        i=0
+        self.send('capw %i' %(i+1)) # wait for capacitance measurement to finish
+        self.send('getc %i' %(i+1))
+        msg = []
+        while True:
+            try:
+                msg.append(self.inst.read().rstrip('\n').split())
+            except:
+               break
+        return float(msg[-2][-2])
 
     def ground(self):
         self.mode({'x':'gnd'})
@@ -85,6 +90,6 @@ class ANC300():
     def _getValue(self, msg):
         """ Looks after equals sign in returned message to get value of parameter """
         while True:
-            print(self.inst.read_bytes(10))#.split()[msg.split().index(b'=')+1].decode('utf-8') #looks after the equal sign
+            self.inst.read_bytes(10).split()[msg.split().index(b'=')+1].decode('utf-8') #looks after the equal sign
 
 

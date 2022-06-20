@@ -1,4 +1,5 @@
 __author__ = 'Aaron'
+'This script uses the ANC300 box'
 
 import warnings
 import time
@@ -7,6 +8,7 @@ import cryolib.general as gen
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
 from attocube.attocube_usb import ANC300
+import DVM.dvm as dvm
 import vna_single_sweep as vnass
 import lakeshore_temp as lakesm
 from pathlib import Path as p
@@ -22,28 +24,22 @@ from matplotlib.backends.backend_pdf import PdfPages
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 anc = ANC300()
-delay_start = False
-delay = 10*3600
-wait_for_temp = True
-wait_temp = 4
 
-db_min = -50
-db_max = -100
+db_min = -10
+db_max = -50
 
 # Folder To Save Files to:
-exp_name = '4k_trans_1_upside_down'
-filepath = p.home() / 'Desktop' / 'ORGAN_Q' / exp_name
+exp_name = 'antenna_vs_freq_3'
+filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'Antenna_motor'/exp_name
 
-# CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 100_000
-ato_step = 200
+ato_end = 2200
+ato_step = 20
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
-
 
 setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x': 1000} # freq in
@@ -52,11 +48,11 @@ anc.V(setVoltage)
 anc.ground()
 
 # Static Temperature:
-measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
-temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
+measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+temperature = 283  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings
-LAKE_gpib = "GPIB1::13::INSTR"
+LAKE_gpib = "GPIB2::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
 LAKE_channel = "8"
 
@@ -69,7 +65,6 @@ plt.draw()
 plt.ion()
 fig1 = plt.figure("MODE MAP")
 plt.draw()
-plt.pause(0.1)
 
 mode_list = np.loadtxt(filepath / runfile, dtype='f8,f8,f8,i,i,f8', delimiter=',')
 if np.size(mode_list) == 1:  # In case we have only one mode
@@ -90,8 +85,7 @@ print(table_data)
 
 # Starting Scan:
 ato_pos_vals = np.arange(ato_start, ato_end + ato_step, ato_step)
-
-print("Running Sweep over Phi = [%s,%s] Steps, with %s step size (%s sweeps)" % (ato_start, ato_end, ato_step, total_steps))
+print("Running Sweep over Phi = [%s,%s] Steps, with %s step size (%s sweeps)" %(ato_start, ato_end, ato_step, total_steps))
 
 vnass.set_module()  # Reset VNA Module
 vnass.establish_connection()  # Establish connection to VNA
@@ -99,16 +93,6 @@ vnass.establish_connection()  # Establish connection to VNA
 if measure_temp:
     print("Preparing Lakeshore for active Temperature Measurement")
     lakesm.connect(LAKE_gpib, LAKE_device_id)  # Prepare lakeshore if actively measuring temperature
-    temperature = lakesm.get_temp(LAKE_channel)
-if delay_start:
-    print(f'Sleeping script for {delay/3600} hrs')
-    time.sleep(delay)
-elif wait_for_temp:
-    print(f'Start script when temp is below {wait_temp}K')
-    while temperature > wait_temp:
-        print(f'Temp is too high, T={temperature}K')
-        temperature = lakesm.get_temp(LAKE_channel)
-        time.sleep(5*60)
 
 # Run over step (phi) values
 # Attocube code begins
@@ -118,7 +102,7 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
         anc.ground()
     else:
         anc.step('x',ato_step,up_down)
-        time.sleep(0.1)  # need to sleep
+        time.sleep(0.1)  # need to sleep otherwise grounds instantly
 
     # Sweep over vna modes
     for mode in mode_list:
@@ -161,8 +145,7 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
         except:
             None
 
-        full_freq = np.linspace(mode_list[0][0] - fspan // 2, fcent + fspan // 2,
-                                ready_data.shape[0])  # freq list in Hz
+        full_freq = np.linspace(mode_list[0][0] - fspan // 2, fcent + fspan // 2,ready_data.shape[0])  # freq list in Hz
         dset = f.create_dataset(str(ato_pos), data=ready_data, compression='gzip', compression_opts=6)  # VNA dset
         try:
             f['Freq']
@@ -190,8 +173,8 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
         ax1 = fig1.add_subplot(111)
         mag_data_db, freq, ato_positions = ato_hdf5_parser(filepath / p(exp_name + '.hdf5'))
         phi = ato_positions // ato_step
-        colour = ax1.imshow(mag_data_db, extent=[phi[0], phi[-1], freq[0], freq[-1]],
-                aspect=(0.8 * (phi[-1] - phi[0]) / (freq[-1] - freq[0])),cmap=plt.cm.get_cmap('viridis'), origin='lower', norm=Normalize(vmin=db_min, vmax=db_max))
+        colour = ax1.imshow(mag_data_db, extent=[phi[0], phi[-1], freq[0], freq[-1]],aspect=(0.8 * (phi[-1] - phi[0]) / (freq[-1] - freq[0])),
+                            cmap=plt.cm.get_cmap('viridis'), origin='lower', norm=Normalize(vmin=db_min, vmax=db_max))
         ax1.set_xlabel(r'Phi (Steps)')
         ax1.set_ylabel(r'Frequency (GHz)')
         cb = fig1.colorbar(colour, ax=ax1, fraction=0.0325, pad=0.04)
@@ -209,5 +192,5 @@ pp = PdfPages(filepath / (exp_name + '_MODE_MAP.pdf'))
 fig1.savefig(pp, format='pdf', dpi=600)
 pp.close()
 
-print("Closing connection to Stepper Motor ")
+print("Closing connection to Stepper Motor ", anc.ground(), dvm.close())
 print("ALL VALUES RECORDED. SWEEP COMPLETE.")

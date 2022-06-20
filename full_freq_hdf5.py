@@ -17,12 +17,12 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
 # Folder To Save Files to:
-exp_name = 'TiNb_mK'
-filepath = p.home()/'Desktop'/'Elrina'/exp_name
+exp_name = 'RT_stationary_w_motor'
+filepath = p.home()/'Desktop'/'Sapphire_wedges'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
-runfile = filepath/'modes.csv'
+runfile = filepath/'run1.csv'
 
 warnings.filterwarnings('ignore', '.*GUI is implemented*') # Suppress Matplotlib warning
 

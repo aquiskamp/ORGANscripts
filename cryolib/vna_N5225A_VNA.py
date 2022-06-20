@@ -4,7 +4,7 @@ __version__ = '20.03.2015_1.0'
 # Module to communicate with VNA via GPIB/SCPI
 
 # ---- GPIB Communications Settings of this instrument >>>>
-VNA_gpib = "GPIB1::16::INSTR"
+VNA_gpib = "GPIB2::16::INSTR"
 VNA_device_id = "Agilent Technologies,N5225A,MY57252028,A.10.47.06"
 
 # <<<<<<
@@ -32,11 +32,6 @@ def connect(VNA_gpib, device_id, new_line_char='\n'):
 
     resp = inst.query("*IDN?").rstrip(inst.read_termination) # Check device ID
     print("Connected to Device ID = " + resp)
-
-    if resp != device_id:
-        inst.close()
-        inst = None
-        raise ValueError("Incorrect Device ID")
 
     return inst
 
@@ -97,7 +92,35 @@ def s21_set_mode(inst, channel="1", window="1", trace_num="1", trace_name = "Def
 
     return
 
+def set_unformatted_phase(inst, channel="1", window="1", trace_num="1", trace_name = "Def_Meas", port="1"):
+    if (trace_num == "1"):
+        inst.write("DISPlay:WINDow" + window + ":TRACe1:DEL")   # Delete existing first trace on screen if we want to use it
 
+    inst.write("CALCulate" +channel + ":PARameter:DEFine:EXT '" + trace_name + "',S21") # Set channel for s21 measurement
+
+    inst.write("DISPlay:WINDow" + window + ":STATE ON") # Activate window
+    inst.write("DISPlay:WINDow" + window + ":TRACe" + trace_num + ":FEED '" + trace_name + "'") # Assign trace to window
+    inst.write("DISPlay:WINDow" + window + ":TRACe" + trace_num + ":SELect")    # Show Trace
+    inst.write("DISPlay:WINDow" + window + ":TRACe" + trace_num + ":TITLe:DATA " + "'Remote Measurement S21'")  # Title Trace
+    inst.write("DISPlay:WINDow" + window + ":TRACe" + trace_num + ":TITLe:STATe ON")    # Show Trace Title
+
+    inst.write("SENSe" + channel + ":SWEep:SPEed NORMal")  # Sweep speed normal
+    inst.write("SENSe" + channel + ":SWEep:MODE CONTinuous")   # Continuous sweep
+    inst.write("SENSe" + channel + ":SWEep:TYPE LINear")   # Linear Sweep Type
+
+    inst.write("SOURce" + channel + ":POWer" + port + ":ATTenuation:AUTO ON")
+    inst.write("SOURce" + channel + ":POWer" + port + ":MODE AUTO")    # Enable Auto attenuation of source
+
+    inst.write("CALCulate" + channel + ":PARameter:SELect '" + trace_name + "'")  # Start measurement of s21 on this channel
+    inst.write("CALCulate" + channel + ":FORMat UPHase")    # Make sure the measurement is in dBm
+
+    # Set Status register to check sweep progress
+    inst.write("STAT:QUES:INT:MEAS" + str(get_channel_int_register(channel)) + ":ENAB " +
+               str(get_channel_int_weight(channel)))
+
+    autoscale(inst, window, trace_num)  # Autoscale window to update view
+
+    return
 
 # Set source power
 # inst: gpib resource object
@@ -221,8 +244,6 @@ def terminate(inst):
     reset(inst)
     inst.close()
     return
-
-
 
 
 # ___ LOCAL USE FUNCTIONS ____
