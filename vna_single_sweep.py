@@ -6,8 +6,8 @@ __version__ = '20.03.2015_1.0'
 import time
 
 #import cryolib.vna_n5230a_PNA as vna
-#import cryolib.vna_N5225A_VNA_usb as vna
-import cryolib.vna_N5225A_VNA as vna
+import cryolib.vna_N5225A_VNA_usb as vna
+#import cryolib.vna_N5225A_VNA as vna
 #import cryolib.vna_E5061B_ENA as vna
 #import cryolib.vna_FFox as vna
 #import cryolib.vna_8720ET_VNA as vna
@@ -72,12 +72,27 @@ def set_module(new_channel="1"):
 
 # Functions
 # Connect to vna
-def establish_connection(mode="S21"):
+def establish_connection():
     global inst
     inst = vna.connect(VNA_gpib, device_id) # establish vna session
     vna.reset(inst) # reset vna
-    vna.set_mode(inst, channel, mode) # prepare for s21 measurement
+    vna.set_mode(inst, channel) # prepare for s21 measurement
     return
+
+def establish_connection_s11():
+    global inst
+    inst = vna.connect(VNA_gpib, device_id) # establish vna session
+    vna.reset(inst) # reset vna
+    vna.set_mode_s11(inst, channel) # prepare for s21 measurement
+    return
+
+def establish_connection_s22():
+    global inst
+    inst = vna.connect(VNA_gpib, device_id) # establish vna session
+    vna.reset(inst) # reset vna
+    vna.set_mode_s22(inst, channel) # prepare for s21 measurement
+    return
+
 
 def establish_connection_uphase():
     global inst
