@@ -26,22 +26,22 @@ tz = ['Australia/Perth']
 anc = ANC300()
 
 db_min = -10
-db_max = -50
+db_max = -40
 
 # Folder To Save Files to:
-exp_name = 'antenna_vs_freq_3'
-filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'Antenna_motor'/exp_name
+exp_name = 'antenna_vs_freq'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 2200
+ato_end = 3000
 ato_step = 20
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
 
-setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
+setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x': 1000} # freq in
 anc.freq(setFreq)
 anc.V(setVoltage)

@@ -8,8 +8,6 @@ VNA_gpib = "USB0::0x0957::0x0118::MY57252028::0::INSTR"
 VNA_device_id = "Agilent Technologies,N5225A,MY57252028,A.10.47.06"
 
 # <<<<<<
-
-
 import pyvisa
 import numpy as np
 

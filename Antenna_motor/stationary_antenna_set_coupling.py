@@ -15,25 +15,25 @@ from tqdm import tqdm
 anc = ANC300()
 
 ############# PARAMETERS
-target_beta = 2
+target_beta = 0.5
 beta_error_window = 0.1 # amount either side of target beta that is acceptable
 beta_upper = target_beta + beta_error_window #max beta
 beta_lower = target_beta - beta_error_window #min beta
-step_size = 30 # how many steps per iteration
-dip_prom = 2 # prominence in dB of the reflection dip
+step_size = 10 # how many steps per iteration
+dip_prom = 1 # prominence in dB of the reflection dip
 dip_width = 0 # number of points wide in freq
-max_height = 10 # must be below this value to be considered (dB)
+max_height = 8 # must be below this value to be considered (dB)
 #############
 
 # Folder To Save Files to:
-exp_name = 'test_antenna'
-filepath = p.home()/'Desktop'/'ORGAN_15GHz'/'Antenna_motor'/exp_name
+exp_name = 'rt_test'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
-runfile = p("run1.csv")
+runfile = filepath/'run1.csv'
 
-setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 300} # freq in
+setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
+setFreq = {'x': 1000} # freq in
 
 anc.freq(setFreq)
 anc.V(setVoltage)
@@ -58,7 +58,7 @@ print("Loaded Settings:")
 print(table_data)
 
 vnass.set_module()  # Reset VNA Module
-vnass.establish_connection_s11()  # Establish connection to VNA
+vnass.establish_connection()  # Establish connection to VNA
 
 idx = 0
 # Sweep over vna modes
@@ -75,7 +75,7 @@ for mode in mode_list:
 
     ######### dipfinder
     dips, f0, dips_dict = dipfinder(db_data,freq_data,p_width=dip_width, prom=dip_prom, Height=max_height)
-    best_window = 0.02
+    best_window = 0.01
     plot_freq_vs_db_mag(freq_data_GHz,db_data,f0[0])
 
     ######### fit to reflection dip
@@ -107,11 +107,11 @@ for mode in mode_list:
         fit_dict = test_refl_fit(ready_data, freq_data_GHz, dips[0], best_window,np.linspace(0,60,30),filepath)
         powerbeta = fit_dict['powerbeta']
         beta = fit_dict['beta']
-        best_window = fit_dict['best_window']
-        print(f'The best window was {best_window*1e3}MHz')
+        #best_window = fit_dict['best_window']
+        #print(f'The best window was {best_window*1e3}MHz')
         plot_freq_vs_db_mag(freq_data_GHz, db_data, f0[0])
 
-    print(f'beta in range = [{beta_lower},{beta_upper}], so we do nothing')
+    print(f'beta in range = [{beta_lower},{beta_upper}], SUCCESS!')
     ############ save data
     with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
         dset = f.create_dataset(str(idx), data=ready_data, compression='gzip', compression_opts=6)

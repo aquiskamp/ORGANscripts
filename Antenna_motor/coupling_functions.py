@@ -58,7 +58,7 @@ def refl_fit(data,freq,dips,window,delay_arr,filepath):
     mag_data = np.abs(data[:, 0] + 1j * data[:, 1])[minpos:maxpos]
     z_data = mag_data * np.exp(1j * phase_data)
     port1 = circuit.reflection_port(f_data, z_data)
-    port1.autofit(electric_delay=delay_min,fr_guess=f_guess)
+    port1.autofit(electric_delay=delay_min)
     powerbeta = power_beta(20*np.log10(mag_data).min(),20*np.log10(mag_data).max())
 
     fit_dict = {}
@@ -86,7 +86,7 @@ def test_refl_fit(data,freq,dips,initial_window,delay_arr,filepath):
     port1 = circuit.reflection_port(f_data, z_data)
 
     for i in delay_arr:
-        port1.autofit(electric_delay=i,fr_guess=f_guess)
+        port1.autofit(electric_delay=i)
         if port1.fitresults.get('chi_square') is not None:
             chi = np.vstack((chi,[port1.fitresults['Ql'],port1.fitresults['chi_square'],i]))
         else:
@@ -102,7 +102,7 @@ def test_refl_fit(data,freq,dips,initial_window,delay_arr,filepath):
     mag_data = np.abs(data[:, 0] + 1j * data[:, 1])[minpos:maxpos]
     z_data = mag_data * np.exp(1j * phase_data)
     port1 = circuit.reflection_port(f_data, z_data)
-    port1.autofit(electric_delay=delay_min,fr_guess=f_guess)
+    port1.autofit(electric_delay=delay_min)
     powerbeta = power_beta(20*np.log10(mag_data).min(),20*np.log10(mag_data).max())
 
     fit_dict = {}

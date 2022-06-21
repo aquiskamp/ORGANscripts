@@ -24,22 +24,22 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 matplotlib.use('TkAgg')
 
-db_min=-50
-db_max=-100
+db_min=-40
+db_max=-80
 
-time_step = 30 #wait time between steps
+time_step = 1 #wait time between steps
 temp_target = 4 # in kelvin
 
 anc = ANC300()
 measure_temp = True  # Do we actually want  to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
-measure_cap = True
+measure_cap = 0
 cap = 0
 cd_plot = True #colour density plot
 
 # Folder To Save Files to:
-exp_name = 'RT_4K_cooldown_loops'
-filepath = p.home()/'Desktop'/'Sapphire_wedges'/exp_name
+exp_name = 'NbTi_cooldown'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'

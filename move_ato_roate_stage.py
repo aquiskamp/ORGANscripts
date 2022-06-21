@@ -7,7 +7,7 @@ from tqdm import tqdm
 from attocube.attocube_usb import ANC300
 anc = ANC300()
 
-anc.step('x',1000,'d')
+#anc.step('x',1000,'d')
 
 
 
@@ -18,8 +18,8 @@ anc.step('x',1000,'d')
 # up_down = 'u' # set to up, to set to down replace 'u' with 'd'
 # setVoltage = 5 # key-value pair, x is axis, '60' is voltage Volts
 # # setFreq = 1000 # freq in Hz
-# rm = pyvisa.ResourceManager()
-# # print(rm.list_resources())
+rm = pyvisa.ResourceManager()
+print(rm.list_resources())
 # inst = rm.open_resource('ASRL4::INSTR') #usually COM
 # # inst.clear()# 3
 # # inst.write('setv 1 30')
