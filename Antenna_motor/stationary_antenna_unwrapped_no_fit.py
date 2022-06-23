@@ -1,9 +1,11 @@
 __author__ = 'Aaron Quiskamp'
 ### Goal is to set coupling of a particular target mode in open loop using linear stage
+### use unwrapped phase instead of fitting to phase
 
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import argrelextrema
 from prettytable import PrettyTable
 import vna_single_sweep as vnass
 import cryolib.general as gen
@@ -15,7 +17,7 @@ from tqdm import tqdm
 anc = ANC300()
 
 ############# PARAMETERS
-target_beta = 1.5
+target_beta = 0.8
 beta_error_window = 0.05 # amount either side of target beta that is acceptable
 beta_upper = target_beta + beta_error_window #max beta
 beta_lower = target_beta - beta_error_window #min beta
@@ -38,7 +40,7 @@ setFreq = {'x': 1000} # freq in
 anc.freq(setFreq)
 anc.V(setVoltage)
 anc.ground()
-#anc.step('x',100,'d')
+#anc.step('x',1000,'u')
 
 mode_list = np.loadtxt(filepath/runfile, dtype='f8,f8,f8,i,i,f8', delimiter=',')
 if np.size(mode_list) == 1: # In case we have only one mode
@@ -58,12 +60,12 @@ print("Loaded Settings:")
 print(table_data)
 
 vnass.set_module()  # Reset VNA Module
-vnass.establish_connection()  # Establish connection to VNA
+vnass.establish_connection_uphase()  # Establish connection to VNA
 
 idx = 0
 # Sweep over vna modes
 for mode in mode_list:
-    sweep_data = vnass.sweep(mode)  # Do a sweep with these parameters
+    uphase,sweep_data = vnass.sweep_multi_trace(mode)  # Do a sweep with these parameters
     db_data = gen.complex_to_dB(sweep_data)
     ready_data = np.transpose(sweep_data)
 
@@ -76,11 +78,10 @@ for mode in mode_list:
     ######### dipfinder
     dips, f0, dips_dict = dipfinder(db_data,freq_data,p_width=dip_width, prom=dip_prom, Height=max_height)
     best_window = 0.03
-    plot_freq_vs_db_mag(freq_data_GHz,db_data,f0[0])
+    plot_freq_vs_db_mag_vs_phase(freq_data_GHz,db_data,uphase,f0[0])
 
     ######### fit to reflection dip
-    fit_dict = test_refl_fit(ready_data,freq_data_GHz,dips[0],best_window,np.linspace(0,60,30),filepath)
-    powerbeta = fit_dict['powerbeta']
+    powerbeta =
     beta = fit_dict['beta']
     print(f'The current fitted beta={beta}, and the power_beta={powerbeta}')
     while (beta_lower>=beta) or (beta>=beta_upper):
@@ -94,8 +95,8 @@ for mode in mode_list:
             anc.step('x', step_size, 'u')
 
         #update mode params
-        mode = [f0[0], fspan, bandwidth, npoints, power, average]
-        sweep_data = vnass.sweep(mode)
+        mode = [f0[0], 50e6, bandwidth, npoints, power, average]
+        uphase,sweep_data = vnass.sweep_multi_trace(mode)
         ready_data = np.transpose(sweep_data)  # Get a transposed version of sweep_data for saving
         db_data = gen.complex_to_dB(sweep_data)
         freq_data = gen.get_frequency_space(f0[0], fspan, npoints)  # Generate list of frequencies
@@ -109,25 +110,25 @@ for mode in mode_list:
         beta = fit_dict['beta']
         #best_window = fit_dict['best_window']
         #print(f'The best window was {best_window*1e3}MHz')
-        plot_freq_vs_db_mag(freq_data_GHz, db_data, f0[0])
+        plot_freq_vs_db_mag_vs_phase(freq_data_GHz, db_data, uphase, f0[0])
         plt.pause(0.1)
 
     print(f'beta in range = [{beta_lower},{beta_upper}], SUCCESS!')
     ############ save data
     with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
-        dset = f.create_dataset(str(idx), data=ready_data, compression='gzip', compression_opts=6)
+        dset = f.create_dataset("s21", data=ready_data, compression='gzip', compression_opts=6)
+        dset1 = f.create_dataset("uphase", data=uphase, compression='gzip', compression_opts=6)
         dset.attrs['f_start'] = mode_list[0][0]
         dset.attrs['f_final'] = fcent
         dset.attrs['vna_pow'] = power
         dset.attrs['vna_span'] = fspan
         dset.attrs['vna_pts'] = npoints
-        dset.attrs['vna_ave'] = naverages
         dset.attrs['vna_rbw'] = fspan / (npoints - 1)
         dset.attrs['vna_ifb'] = bandwidth
         dset.attrs['nmodes'] = mode_list.shape[0]
-        dset.attrs['ato_voltage'] = setVoltage
-        dset.attrs['ato_freq'] = setFreq
-        dset.attrs['ato_step'] = ato_step
+        dset.attrs['ato_voltage'] = setVoltage['x']
+        dset.attrs['ato_freq'] = setFreq['x']
+        dset.attrs['ato_step'] = step_size
         dset.attrs['beta'] = fit_dict['beta']
         dset.attrs['powerbeta'] = fit_dict['powerbeta']
     idx+=1

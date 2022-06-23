@@ -4,6 +4,9 @@ from pathlib import Path as p
 from resonator_tools import circuit
 import warnings
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Qt5Agg')
+
 
 def dipfinder(data,freq,p_width, prom, Height):
     # Find peaks with data given as db
@@ -26,7 +29,7 @@ def test_func():
 
 def refl_fit(data,freq,dips,window,delay_arr,filepath):
     warnings.filterwarnings("ignore")
-    save_dir = filepath/'delay_refl_fit'
+    save_dir = filepath/'refl_fit'
     f_guess = freq[dips]
     chi = np.empty((0,3))
     p(save_dir).mkdir(parents=True, exist_ok=True)
@@ -72,7 +75,7 @@ def refl_fit(data,freq,dips,window,delay_arr,filepath):
 
 def test_refl_fit(data,freq,dips,initial_window,delay_arr,filepath):
     warnings.filterwarnings("ignore")
-    save_dir = filepath/'delay_refl_fit'
+    save_dir = filepath/'refl_fit'
     f_guess = freq[dips]
     chi = np.empty((0,3))
     p(save_dir).mkdir(parents=True, exist_ok=True)
@@ -120,6 +123,7 @@ def plot_freq_vs_db_mag(freq_GHz,db_data,fcent):
     fig = plt.figure("VNA")
     plt.draw()
     fig.clf()
+    move_figure()
     ax = fig.add_subplot(111)
     ax.set_title("f = %.3f GHz" % (fcent / 1e9), fontsize=16)
     ax.plot(freq_GHz, db_data, "g")
@@ -128,6 +132,7 @@ def plot_freq_vs_db_mag(freq_GHz,db_data,fcent):
     ax.set_xlabel('Frequency [GHz]')
     plt.axis('tight')
     plt.pause(0.1)
+
     # df = pd.DataFrame([fit_dict]) #write results to dict so we can export to csv
     # if phi==0:
     #     f = open(save_dir + 'refl_params.csv','w')
@@ -135,3 +140,52 @@ def plot_freq_vs_db_mag(freq_GHz,db_data,fcent):
     # with open(save_dir + 'refl_params.csv','a') as f:
     #     df.to_csv(f, mode='a', header=f.tell()==0)
     # port1.plotallsave_delay(save_dir + 'phi = ' + str(phi_val)+'.pdf')
+
+def plot_freq_vs_db_mag_vs_phase(freq_GHz,db_data,phase,fcent):
+    plt.ion()
+    fig = plt.figure("VNA")
+    plt.draw()
+    fig.clf()
+    move_figure()
+    ax = fig.add_subplot(111)
+    ax2 = ax.twinx()
+    ax.set_title("f = %.3f GHz" % (fcent / 1e9), fontsize=16)
+    ax.plot(freq_GHz, db_data, "g")
+    ax2.plot(freq_GHz,phase,'b')
+    ax2.set_ylabel('Phase (deg)')
+    #ax.scatter(freq_GHz,db_data[dips],marker='X',color='red',s=30)
+    ax.set_ylabel(r'$S_{21}$ [dB]')
+    ax.set_xlabel('Frequency [GHz]')
+    plt.tight_layout()
+    plt.pause(0.1)
+
+def move_figure(position="top-left"):
+    '''
+    Move and resize a window to a set of standard positions on the screen.
+    Possible positions are:
+    top, bottom, left, right, top-left, top-right, bottom-left, bottom-right
+    '''
+
+    mgr = plt.get_current_fig_manager()
+    #gr.full_screen_toggle()  # primitive but works to get screen size
+    #py = mgr.canvas.height()
+    #px = mgr.canvas.width()
+
+    d = 20  # width of the window border in pixels
+    if position == "top":
+        # x-top-left-corner, y-top-left-corner, x-width, y-width (in pixels)
+        mgr.window.setGeometry(d, 4*d, px - 2*d, py/2 - 4*d)
+    elif position == "bottom":
+        mgr.window.setGeometry(d, py/2 + 5*d, px - 2*d, py/2 - 4*d)
+    elif position == "left":
+        mgr.window.setGeometry(d, 4*d, px/2 - 2*d, py - 4*d)
+    elif position == "right":
+        mgr.window.setGeometry(px/2 + d, 4*d, px/2 - 2*d, py - 4*d)
+    elif position == "top-left":
+        mgr.window.setGeometry(d, 4*d,600,500)
+    elif position == "top-right":
+        mgr.window.setGeometry(px/2 + d, 4*d, px/2 - 2*d, py/2 - 4*d)
+    elif position == "bottom-left":
+        mgr.window.setGeometry(d, py/2 + 5*d, px/2 - 2*d, py/2 - 4*d)
+    elif position == "bottom-right":
+        mgr.window.setGeometry(px/2 + d, py/2 + 5*d, px/2 - 2*d, py/2 - 4*d)
