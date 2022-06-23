@@ -1,12 +1,6 @@
 __author__ = 'Aaron'
 
 import time
-import numpy as np
-from attocube.attocube import ANC300
-from pathlib import Path as p
-from datetime import datetime
-from pytz import timezone
-import h5py
 import lakeshore_temp as lakesm
 
 LAKE_gpib = "GPIB0::13::INSTR"

@@ -45,7 +45,7 @@ filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/exp_name
 runfile = filepath/'run1.csv'
 
 # Temperature Controller Settings
-LAKE_gpib = "GPIB2::13::INSTR"
+LAKE_gpib = "GPIB0::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
 LAKE_channel = "8"
 
