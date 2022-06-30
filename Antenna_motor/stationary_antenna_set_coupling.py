@@ -15,7 +15,7 @@ from tqdm import tqdm
 anc = ANC300()
 
 ############# PARAMETERS
-target_beta = 1.5
+target_beta =
 beta_error_window = 0.05 # amount either side of target beta that is acceptable
 beta_upper = target_beta + beta_error_window #max beta
 beta_lower = target_beta - beta_error_window #min beta
@@ -115,19 +115,21 @@ for mode in mode_list:
     print(f'beta in range = [{beta_lower},{beta_upper}], SUCCESS!')
     ############ save data
     with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
-        dset = f.create_dataset(str(idx), data=ready_data, compression='gzip', compression_opts=6)
-        dset.attrs['f_start'] = mode_list[0][0]
-        dset.attrs['f_final'] = fcent
-        dset.attrs['vna_pow'] = power
-        dset.attrs['vna_span'] = fspan
-        dset.attrs['vna_pts'] = npoints
-        dset.attrs['vna_ave'] = naverages
-        dset.attrs['vna_rbw'] = fspan / (npoints - 1)
-        dset.attrs['vna_ifb'] = bandwidth
-        dset.attrs['nmodes'] = mode_list.shape[0]
-        dset.attrs['ato_voltage'] = setVoltage
-        dset.attrs['ato_freq'] = setFreq
-        dset.attrs['ato_step'] = ato_step
+        dset = f.create_dataset("VNA", data=ready_data, compression='gzip', compression_opts=6)
+        fdset = f.create_dataset('Freq', data=freq_data, compression='gzip', compression_opts=6)
+        fdset.attrs['f_start'] = mode_list[0][0]  # this is from the mode map / next freq
+        fdset.attrs['f_final'] = fcent
+        fdset.attrs['vna_pow'] = power
+        fdset.attrs['vna_span'] = fspan
+        fdset.attrs['vna_pts'] = npoints
+        fdset.attrs['vna_ave'] = average
+        fdset.attrs['vna_rbw'] = fspan / (npoints - 1)
+        fdset.attrs['vna_ifb'] = bandwidth
+        fdset.attrs['nmodes'] = mode_list.shape[0]
+        fdset.attrs['ato_voltage'] = setVoltage['x']
+        fdset.attrs['ato_freq'] = setFreq['x']
+        fdset.attrs['ato_step'] = step_size
+
         dset.attrs['beta'] = fit_dict['beta']
         dset.attrs['powerbeta'] = fit_dict['powerbeta']
     idx+=1

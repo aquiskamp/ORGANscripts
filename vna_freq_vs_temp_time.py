@@ -24,22 +24,22 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 matplotlib.use('TkAgg')
 
-db_min=-50
-db_max=-100
+db_min=-10
+db_max=-60
 
-time_step = 30 #wait time between steps
+time_step = 60 #wait time between steps
 timeout = time.time() + 8*3600  # seconds
 
 anc = ANC300()
-measure_temp = True  # Do we actually want  to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = 0  # Do we actually want  to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
-measure_cap = True
+measure_cap = False
 cap = 0
 cd_plot = True #colour density plot
 
 # Folder To Save Files to:
-exp_name = 'RT_4K_cooldown_loops'
-filepath = p.home()/'Desktop'/'Sapphire_wedges'/exp_name
+exp_name = '4k_beta_vs_time'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
@@ -115,7 +115,7 @@ while True:
             ax.set_xlabel('Frequency [GHz]')
             plt.axis('tight')
             plt.draw()
-            plt.pause(0.1)
+            plt.pause(0.2)
 
             if list(mode_list).index(mode) == 0:
                 ready_data = np.transpose(sweep_data)
@@ -151,7 +151,6 @@ while True:
             dset.attrs['cap'] = cap
         idx += 1
         print(f'Current temp is {temperature}K')
-        time.sleep(time_step)
 
     if cd_plot:
         if idx % 5 == 0 and idx != 0:
@@ -168,7 +167,7 @@ while True:
             plt.title(exp_name)
             plt.draw()
             plt.pause(0.1)
-
+    time.sleep(time_step)
 if cd_plot:
     # save modemap
     pp = PdfPages(filepath / (exp_name + '_MODE_MAP.pdf'))
