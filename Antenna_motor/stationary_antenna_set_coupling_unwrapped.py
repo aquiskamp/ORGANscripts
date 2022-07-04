@@ -16,8 +16,8 @@ from tqdm import tqdm
 anc = ANC300()
 
 ############# PARAMETERS
-target_beta = 1
-beta_error_window = 0.005 # amount either side of target beta that is acceptable
+target_beta = 2
+beta_error_window = 0.001 # amount either side of target beta that is acceptable
 beta_upper = target_beta + beta_error_window #max beta
 beta_lower = target_beta - beta_error_window #min beta
 step_size = 5 # how many steps per iteration
@@ -27,7 +27,7 @@ max_height = 11 # must be below this value to be considered (dB)
 #############
 
 # Folder To Save Files to:
-exp_name = '4k_test'
+exp_name = '4k_test_2'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
@@ -76,7 +76,7 @@ for mode in mode_list:
 
     ######### dipfinder
     dips, f0, dips_dict = dipfinder(db_data,freq_data,p_width=dip_width, prom=dip_prom, Height=max_height)
-    best_window = 0.03
+    best_window = 0.02
     plot_freq_vs_db_mag_vs_phase(freq_data_GHz,db_data,uphase,f0[0])
 
     ######### fit to reflection dip
@@ -95,7 +95,7 @@ for mode in mode_list:
             anc.step('x', step_size, 'u')
 
         #update mode params
-        mode = [f0[0], 50e6, bandwidth, npoints, power, average]
+        mode = [f0[0], 20e6, bandwidth, npoints, power, average]
         uphase,sweep_data = vnass.sweep_multi_trace(mode)
         ready_data = np.transpose(sweep_data)  # Get a transposed version of sweep_data for saving
         db_data = gen.complex_to_dB(sweep_data)

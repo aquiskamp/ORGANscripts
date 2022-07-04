@@ -23,10 +23,6 @@ def power_beta(on,off):
     return (1-np.sqrt(10**(on/10)/10**(off/10)))/(1+np.sqrt(10**(on/10)/10**(off/10)))
 
 
-def test_func():
-    global filepath
-    print(filepath)
-
 def refl_fit(data,freq,dips,window,delay_arr,filepath):
     warnings.filterwarnings("ignore")
     save_dir = filepath/'refl_fit'

@@ -162,7 +162,7 @@ def sweep(params):
 
             sweep_time = vna.get_sweep_time(inst, channel)
             if averaging_mode == "sweep":
-                sweep_time = sweep_time * naverages*1 + 1.5# If the mode is "sweep", need to account for multiple sweeps
+                sweep_time = sweep_time * naverages*1 + 2# If the mode is "sweep", need to account for multiple sweeps
             print("Freq = %2.2e Hz > Sweep Time = %.1f secs" % (fcent, round(sweep_time, 1)))
 
             if (sweep_time > 2.0):
@@ -190,7 +190,7 @@ def sweep(params):
         except pyvisa.errors.VisaIOError as e:
             warnings.warn("VNA GPIB VisaIOError")
             print('VNA Comm Failed! Err: ', str(e), 'Waiting to flush visa')
-            plt.pause(10) # Wait for 10 seconds for vna to catch up?
+            time.sleep(5) # Wait for 10 seconds for vna to catch up?
 
         else:
             break
@@ -253,9 +253,9 @@ def sweep_multi_trace(params):
             while (t < sweep_time):
                 vna.autoscale(inst,trace_num='1') # Autoscale View
                 vna.autoscale(inst,trace_num='2') # Autoscale View
-                percentage = int(t / sweep_time * 100.0)
-                print(percentage)
-                print('Progress: [%d%%]\r' % percentage, end="")
+                #percentage = int(t / sweep_time * 100.0)
+                #print(percentage)
+                #print('Progress: [%d%%]\r' % percentage, end="")
 
                 if float(t) > (sweep_time + time_step):
                     warnings.warn("Sweep time exceeded, waiting!..")
@@ -264,7 +264,7 @@ def sweep_multi_trace(params):
                 t += time_step
             uphase = vna.download_formatted(inst, channel)  # download complex values
             s21data = vna.download_complex(inst,channel)
-            print("Sweep Complete (" + str(int(s21data.size / 2)) + " points)")
+            #print("Sweep Complete (" + str(int(s21data.size / 2)) + " points)")
 
 
         except pyvisa.errors.VisaIOError as e:

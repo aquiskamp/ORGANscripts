@@ -17,7 +17,7 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
 # Folder To Save Files to:
-exp_name = 'empty_cavity_undercoupled'
+exp_name = 'empty_cavity'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
