@@ -27,6 +27,10 @@ def get_temp(channel="8"):
     temp = lakeshore.get_temperature(lake_inst, channel)
     return temp
 
+def get_resistance(channel="8"):
+    temp = lakeshore.get_resistance(lake_inst, channel)
+    return temp
+
 
 # Terminates Connection to Lakeshore
 def disconnect():

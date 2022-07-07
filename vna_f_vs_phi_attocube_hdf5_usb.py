@@ -15,44 +15,45 @@ from pytz import timezone
 import h5py
 from attocube.ato_func import ato_hdf5_parser
 from matplotlib import cm
+import matplotlib
 from matplotlib.colors import Normalize
 from tqdm import tqdm
 from matplotlib.backends.backend_pdf import PdfPages
+matplotlib.use('Qt5Agg')
 
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 anc = ANC300()
 delay_start = False
 delay = 10*3600
-wait_for_temp = True
+wait_for_temp = False
 wait_temp = 4
 
 db_min = -50
 db_max = -100
 
 # Folder To Save Files to:
-exp_name = '4k_trans_1_upside_down'
-filepath = p.home() / 'Desktop' / 'ORGAN_Q' / exp_name
+exp_name = 'rt_hollow_6_screws'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 100_000
+ato_end = 8_000
 ato_step = 200
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
 
-
-setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
+setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x': 1000} # freq in
 anc.freq(setFreq)
 anc.V(setVoltage)
 anc.ground()
 
 # Static Temperature:
-measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings

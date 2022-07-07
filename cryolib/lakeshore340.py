@@ -54,6 +54,10 @@ def get_temperature(inst, channel="B"):
     temp = float(inst.read().rstrip(inst.read_termination)) # For lakeshore 340
     return temp
 
+def get_resistance(inst, channel="B"):
+    inst.write("SRDG? " + channel)
+    temp = float(inst.read().rstrip(inst.read_termination)) # For lakeshore 340
+    return temp
 
 # Terminates Connection to Lakeshore
 # inst: gpib resource object
