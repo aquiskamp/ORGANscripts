@@ -111,6 +111,10 @@ def print_h5_struct(name, obj):
         print('Group:', name)
 
 
+
+
+
+
 # reads
 def read_h5_file(filename):
     with h5py.File(filename, 'r') as f:  # file will be closed when we exit from WITH scope
@@ -146,7 +150,7 @@ def present_data(db_data, freq_data, fcent, fspan):
     plt.xlabel('Frequency (GHz)')
     plt.title("f = %.3f GHz" % (fcent / 1e9), fontsize=16)
 
-    dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=30, prom=2, Height=20)  # get frequency of dip
+    dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=30, prom=2, Height=18)  # get frequency of dip
     dip_difference = (abs(f0 - fcent) / fspan) * 100
     txt = "Dip frequency (GHz): %.3f\n Centre Frequency (GHz) : %.3f \n Percentage difference : %d%%\n" % (
     f0, fcent, dip_difference)
@@ -162,16 +166,21 @@ def fit_data(f_data, z_data, db_data, fcent, fspan):
     port1 = circuit.reflection_port(f_data, z_data)
     port1.autofit()
     desiredspan = 4*(port1.fitresults['fr']/port1.fitresults['Ql'])
+    print(desiredspan)
 
     # find percentage difference and then centre and fit to desired span
-    dips, f0, dips_dict = cf.dipfinder(db_data, f_data, p_width=30, prom=2, Height=20)
-    dip_difference = float(((f0 - fcent) / fspan) * 100)
-    # print("dip difference =", dip_difference, "f0 index = ", dips[0])
+    dips, f0, dips_dict = cf.dipfinder(db_data, f_data, p_width=30, prom=2, Height=18)
+
+    dip_difference = ((f0 - fcent) / fspan) * 100
+    print("dip difference =", dip_difference) #, "f0 index = ", dips[0])
 
     if dip_difference > 0:
         newspanlen = len(f_data[dips[0]:]) - 1
         if desiredspan < fspan:
             newspanlen = int(newspanlen*(desiredspan/fspan))
+        elif fspan >= 100e06:
+            newspanlen = int(newspanlen/10)
+        print("newspanlen = ", newspanlen)
         min = dips[0]-newspanlen
         max = dips[0]+newspanlen
         f_data = f_data[min:max]
@@ -186,14 +195,27 @@ def fit_data(f_data, z_data, db_data, fcent, fspan):
         z_data = z_data[dips[0] - newspanlen:dips[0] + newspanlen]
 
     port2 = circuit.reflection_port(f_data, z_data)
-
-    # delays = np.linspace(0,60,30)
-    # for i in delays:
-    #     port1.autofit(electric_delay=i, fr_guess=f0)
-
-    # port1.plotrawdata()
-
     port2.autofit()
+    mindelay = port2._delay
+    minchi = port2.fitresults["chi_square"]
+    print("current delay = ", mindelay, "curr chi = ", minchi)
+    delays = np.linspace(-2*mindelay,2*mindelay,100)
+
+    for i in delays:
+        port2.autofit(electric_delay=i)
+        if port2.fitresults["chi_square"] is None:
+            continue
+        else:
+            chi = port2.fitresults["chi_square"]
+            fr_err = port2.fitresults["fr_err"]
+        if chi < minchi and fr_err < 1e09:
+            minchi = chi
+            mindelay = i
+
+    print("MIN  CHI, DELAY=", minchi, mindelay)
+    port2.autofit(electric_delay= mindelay)
+    # port1.plotrawdata()
     port2.plotall()
     print("Fit results:", port2.fitresults)
     print("Fit results PORT1:", port1.fitresults)
+

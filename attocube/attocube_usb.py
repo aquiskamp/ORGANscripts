@@ -33,7 +33,7 @@ class ANC300():
 
     def freq(self, f):
         for key, value in f.items():
-            self.send('setf %i %i' %(self._stages.index(key)+1, value)) # e.g. setf 1 100 to set x axis to 100 Hz
+            self.send('setf %i %i' %(self._stages.index(key)+1, value)) # e.g. set f 1 100 to set x axis to 100 Hz
 
     def mode(self, m):
         """ Mode, choose from: gnd, cap, stp """
