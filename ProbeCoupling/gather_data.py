@@ -216,6 +216,9 @@ def fit_data(f_data, z_data, db_data, fcent, fspan):
     port2.autofit(electric_delay= mindelay)
     # port1.plotrawdata()
     port2.plotall()
+    couplingcoeff = port2.fitresults['Qc']/port2.fitresults['Ql'] -1
+    powerbeta = cf.power_beta(20*np.log10(abs(z_data)).min(),20*np.log10(abs(z_data)).max())
+    print ("BETA = ", couplingcoeff, "BETA (square version) = ", powerbeta)
     print("Fit results:", port2.fitresults)
     print("Fit results PORT1:", port1.fitresults)
 
