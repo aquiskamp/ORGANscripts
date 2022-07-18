@@ -15,19 +15,19 @@ import h5py
 from tqdm import tqdm
 anc = ANC300()
 
-############# PARAMETERS
-target_beta = 2
-beta_error_window = 0.001 # amount either side of target beta that is acceptable
+############# PARAMETERS 
+target_beta = 0.8
+beta_error_window = 0.05 # amount either side of target beta that is acceptable
 beta_upper = target_beta + beta_error_window #max beta
 beta_lower = target_beta - beta_error_window #min beta
-step_size = 5 # how many steps per iteration
+step_size = 25# how many steps per iteration
 dip_prom = 5 # prominence in dB of the reflection dip
 dip_width = 0 # number of points wide in freq
 max_height = 11 # must be below this value to be considered (dB)
 #############
 
 # Folder To Save Files to:
-exp_name = '4k_test_2'
+exp_name = 'rt_test'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
@@ -95,7 +95,7 @@ for mode in mode_list:
             anc.step('x', step_size, 'u')
 
         #update mode params
-        mode = [f0[0], 20e6, bandwidth, npoints, power, average]
+        mode = [f0[0], 50e6, bandwidth, npoints, power, average]
         uphase,sweep_data = vnass.sweep_multi_trace(mode)
         ready_data = np.transpose(sweep_data)  # Get a transposed version of sweep_data for saving
         db_data = gen.complex_to_dB(sweep_data)

@@ -22,6 +22,9 @@ def setup_4w_meas(range):
 def read_4w_meas(range,res):
     return float(dvm.query(f'MEAS:FRES? {range},{res}'))
 
+def read_2w_meas(range,res):
+    return float(dvm.query(f'MEAS:RES? {range},{res}'))
+
 def close():
     dvm.close()
 

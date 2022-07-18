@@ -22,10 +22,10 @@ def FFTread(ch1):
     return fAR
 
 # Folder To Save Files to:
-exp_name = 'thermal_noise_beta_short'
+exp_name = 'thermal_noise_beta_RT'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
 
-mode_f = 7.189e9
+mode_f = 7.162e9
 psd = True     #PSD?
 
 fft_start = 3e6
@@ -36,12 +36,12 @@ fft_cent = fftf_vec[fft_points//2]
 fft_ave = 2048
 ave_update_rate = fft_ave//4
 sensitivity = -35
-nsteps = 3
+nsteps = 1
 Rx = np.zeros((fft_points,nsteps))
 
 #calibrate sweep time
-cal_fft_time = 15 # seconds
-cal_averages = 128 # averages for time above
+cal_fft_time = 9 # seconds
+cal_averages = 100 # averages for time above
 sweep_time = cal_fft_time/cal_averages # for a single sweep
 
 ### synth
@@ -52,7 +52,7 @@ print(rm.list_resources())
 print("I am going to use the following devices:")
 
 fftm = rm.open_resource('GPIB1::20::INSTR')
-sg = rm.open_resource('GPIB2::19::INSTR')
+sg = rm.open_resource('USB0::0x0957::0x1F01::MY61252954::0::INSTR')
 
 print(sg.query("*IDN?"))
 print(fftm.query("*IDN?"))
