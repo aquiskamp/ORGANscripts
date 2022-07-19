@@ -3,6 +3,7 @@ __author__ = 'Aaron'
 import warnings
 import time
 import numpy as np
+import lakeshore_temp as lakesm
 import cryolib.general as gen
 import matplotlib.pyplot as plt
 from pathlib import Path as p
@@ -17,12 +18,26 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
 # Folder To Save Files to:
-exp_name = 'cavity_to_amp_cal'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
+exp_name = 'NbTi_rebored'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'NbTi_bulk'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
+
+# Static Temperature:
+measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
+
+# Temperature Controller Settings
+LAKE_gpib = "GPIB0::13::INSTR"
+LAKE_device_id = "LSCI,MODEL340,342638,061407"
+LAKE_channel = "8"
+
+if measure_temp:
+    print("Preparing Lakeshore for active Temperature Measurement")
+    lakesm.connect(LAKE_gpib, LAKE_device_id)  # Prepare lakeshore if actively measuring temperature
+    temperature = lakesm.get_temp(LAKE_channel)
 
 warnings.filterwarnings('ignore', '.*GUI is implemented*') # Suppress Matplotlib warning
 
@@ -94,5 +109,6 @@ with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
     fdset.attrs['vna_ifb'] = bandwidth
     fdset.attrs['nmodes'] = mode_list.shape[0]
     fdset.attrs['time'] = t
+    fset.attrs['temp'] = temperature
 
 print('SWEEP FINISHED')
