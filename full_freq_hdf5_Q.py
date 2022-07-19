@@ -1,8 +1,8 @@
 __author__ = 'Aaron'
 '''Do full freq sript and return 3dB Qs'''
 
-import warnings
 import time
+import lakeshore_temp as lakesm
 import numpy as np
 import pandas as pd
 import cryolib.general as gen
@@ -15,20 +15,23 @@ from pytz import timezone
 import h5py
 from tqdm import tqdm
 from useful_functions import *
+import matplotlib
+from matplotlib.backends.backend_pdf import PdfPages
+matplotlib.use('Qt5Agg')
 
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
 #Q3db params
 prom = 5
-peak_width = 5
+peak_width = 2
 rel = 0.1
-window = 50
+window = 500
 Height = -80 # in db
 
 # Folder To Save Files to:
-exp_name = 'cavity_to_amp_cal'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
+exp_name = 'NbTi_rebored'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'NbTi_bulk'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
@@ -102,17 +105,19 @@ for mode in tqdm(mode_list):
 
 #Get 3db Q estimate for prominent modes
 full_freq = np.linspace(mode_list[0][0] - fspan // 2, fcent + fspan // 2, ready_data.shape[0])  # freq list in Hz
-mag_data_db = 10*np.log10(ready_data[:,0]**2 + ready_data:,1]**2)
+mag_data_db = 10*np.log10(ready_data[:,0]**2 + ready_data[:,1]**2)
 
 try:
     peaks, f0s, Qs, peak_heights = full_freq_Q3db(mag_data_db,full_freq,prom,peak_width,rel,window,Height,full_freq[0],full_freq[-1])
-    df = pd.DataFrame([f0s,Qs,peak_heights],columns=['f0s','Qs','peak_db'])
+    df = pd.DataFrame(np.array([f0s,Qs,peak_heights]).T,columns=['f0s','Qs','peak_db'])
 
     fig, ax = plt.subplots(1, figsize=(16, 8))
-    plt.plot(full_freq/1e9, mag_data_db)
-    plt.plot(f0s/1e9, data[peaks], "x", color="C2", markersize=10)
-    plt.xlabel(r'Frequency (GHz)')
-    plt.ylabel('$|S_{21}|$ (dB)')
+    plt.plot(full_freq/1e9, mag_data_db,color='blue')
+    plt.plot(f0s/1e9, mag_data_db[peaks], "x", color="red", markersize=10)
+    plt.xlabel(r'Frequency (GHz)',fontsize=22)
+    plt.ylabel('$|S_{21}|$ (dB)',fontsize=22)
+    ax.tick_params(axis='x', labelsize=10)
+    ax.tick_params(axis='y', labelsize=10)
     plt.show()
 
     # save plot
@@ -121,11 +126,10 @@ try:
     pp.close()
 
     # save Qs
-    df.to_csv('f0_vs_Q.csv',index=False)
+    df.to_csv(filepath/'f0_vs_Q.csv',index=False)
 
 except:
     print('Could not find Qs')
-
 
 with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
     dset = f.create_dataset('VNA', data=ready_data, compression='gzip', compression_opts=6)  # VNA dset
@@ -140,6 +144,6 @@ with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
     fdset.attrs['vna_ifb'] = bandwidth
     fdset.attrs['nmodes'] = mode_list.shape[0]
     fdset.attrs['time'] = t
-    fset.attrs['temp'] = temperature
+    fdset.attrs['temp'] = temperature
 
 print('SWEEP FINISHED')

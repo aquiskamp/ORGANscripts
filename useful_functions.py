@@ -1,3 +1,8 @@
+import numpy as np
+from scipy.signal import find_peaks
+from scipy.signal import peak_widths
+from scipy.signal import peak_prominences
+
 def find_nearest(a, a0):
     "Element in nd array `a` closest to the scalar value `a0`"
     idx = np.abs(a - a0).argmin()
@@ -26,7 +31,7 @@ def full_freq_Q3db(data_db, freq_list, prom, peak_width, rel, window, Height, xm
     widths, h_eval, left_ips, right_ips = peak_widths(data, peaks[0], rel_height=1,prominence_data=(offset, left_bases, right_bases))
 
     f0s = freq_croppped[peaks[0]]
-    Qs = [f0s / (vna_rbw * widths)]
+    Qs = f0s / (vna_rbw * widths)
     peak_heights = peaks[1]['peak_heights']
 
     return peaks[0], f0s, Qs, peak_heights
