@@ -7,10 +7,7 @@ from tqdm import tqdm
 from attocube.attocube_usb import ANC300
 anc = ANC300()
 
-anc.step('x',1000,'d')
-
-
-
+#anc.freq({'x':1000})
 
 #wait_time = 1*15 #seconds
 
@@ -18,13 +15,13 @@ anc.step('x',1000,'d')
 # up_down = 'u' # set to up, to set to down replace 'u' with 'd'
 # setVoltage = 5 # key-value pair, x is axis, '60' is voltage Volts
 # # setFreq = 1000 # freq in Hz
-# rm = pyvisa.ResourceManager()
-# # print(rm.list_resources())
-# inst = rm.open_resource('ASRL4::INSTR') #usually COM
+rm = pyvisa.ResourceManager()
+print(rm.list_resources())
+inst = rm.open_resource('ASRL4::INSTR') #usually COM
 # # inst.clear()# 3
 # # inst.write('setv 1 30')
 # # # # inst.write('setf 1 1000')
-# # inst.write('setm 1 gnd')
+inst.write('setm 1 gnd')
 # # # # inst.write('stepd 1 20000')
 # # # # time.sleep(30)
 # inst.read_termination = '\n'

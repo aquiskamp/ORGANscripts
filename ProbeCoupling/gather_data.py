@@ -13,6 +13,8 @@ from pytz import timezone
 import matplotlib.pyplot as plt
 import Antenna_motor.coupling_functions as cf
 import resonator_tools.circuit as circuit
+import peakutils as pu
+from scipy import stats
 
 
 # variables
@@ -27,7 +29,7 @@ def input_popup(default):
     input_list = ["Centre Frequency (Hz)", "Frequency Span (Hz)", "Bandwidth (Hz)", "No. Points", "No. Averages",
                   "Power (dBm)"]
     if default is True:
-        param = np.array([7130000000, 100000000, 300, 1601, 1, 0])
+        param = np.array([7130000000, 100000000, 1000, 3201, 1, -10])
     else:
         output = multenterbox(text, title, input_list)
         param = np.array(output)
@@ -51,37 +53,40 @@ def input_popup(default):
 # returns sweep data and transpose of sweep data.
 
 def gather_data(params, writefile):
-    #    params = input_popup()                                                                                         #gather VNA sweep parameters
+    # gather VNA sweep parameters
     channel = "1"  # VNA Channel number
-    warn_email_list = ['22496421@student.uwa.edu.au']
     vnass.set_module(channel)  # do i need channel?
     vnass.establish_connection()  # establish connection to vna
 
     sweep_data = vnass.sweep(params)  # Do a sweep with these parameters
     db_data = gen.complex_to_dB(sweep_data)
     ready_data = np.transpose(sweep_data)
+    z_data = ready_data[:, 0] + ready_data[:, 1] * 1j
 
     fcent, fspan, bandwidth, npoints, power, average = params
     freq_data = gen.get_frequency_space(fcent, fspan, npoints)
 
     # find actual resonant frequency and how far off initial sweep was
-    dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=30, prom=2, Height=20)  # get frequency of dip
+    dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=2, prom=2, Height=15)  # get frequency of dip
     dip_difference = (abs(f0 - fcent) / fspan) * 100
 
-    # if the difference is larger than 3%, resweep and reduce span to increase resolution
-    if dip_difference > 3:
+    # if the difference is larger than 1%, resweep and reduce span to increase resolution
+    if dip_difference > 1:
+        newfreq, newdb, desiredhalfspan = find_desired_span(db_data, freq_data, f0)
         params[0] = f0
-        params[1] = int(fspan / 2)  # idk if you need to typecast
+        params[1] = int(desiredhalfspan * 2)
+        # params[1] = int(fspan / 2)  # idk if you need to typecast
 
         sweep_data = vnass.sweep(params)  # Do a sweep with these parameters
         db_data = gen.complex_to_dB(sweep_data)
         ready_data = np.transpose(sweep_data)
+        z_data = ready_data[:, 0] + ready_data[:, 1] * 1j
 
     if writefile:
         t = datetime.now(timezone('Australia/Perth')).strftime("%Y_%m_%d %H_%M_%S")
         time_stamp = "time=%s" % t
         filepath = p.home()
-        filename = "vna_antennacoupling" + fcent + "_" + time_stamp
+        filename = "vna_antennacoupling" + str(fcent) + "_" + time_stamp
         full_filename = p(filepath / (str(filename) + '.h5'))
         print(full_filename)
 
@@ -101,7 +106,7 @@ def gather_data(params, writefile):
 
         print('SWEEP FINISHED')
 
-        return ready_data, db_data, freq_data
+    return ready_data, db_data, z_data, freq_data
 
 
 def print_h5_struct(name, obj):
@@ -109,10 +114,6 @@ def print_h5_struct(name, obj):
         print('Dataset:', name)
     elif isinstance(obj, h5py.Group):
         print('Group:', name)
-
-
-
-
 
 
 # reads
@@ -138,69 +139,119 @@ def read_h5_file(filename):
     return freq, vna_transpose, params
 
 
+def find_desired_span(db_data, f_data, f0, z_data=None):
+    # derive 3dB baseline
+    baseline_vals = pu.baseline(-db_data)
+    threedbline = -baseline_vals - 3
+
+    # find point of intersection
+    idx = np.argwhere(np.diff(np.sign(db_data - threedbline))).flatten()
+    threedbbandwidth = f_data[idx[1]] - f_data[idx[0]]  # assuming baseline doesnt intersect
+
+    # derive desired span and return new data sets with that span
+    desiredhalfspan = 2 * threedbbandwidth
+    print("new span is", 2 * desiredhalfspan)
+    maxfreq = f0 + desiredhalfspan
+    minfreq = f0 - desiredhalfspan
+    max = cf.find_nearest_pos(f_data, maxfreq)
+    min = cf.find_nearest_pos(f_data, minfreq)
+    newfreq = f_data[min:max]
+    newdbdata = db_data[min:max]
+    if z_data is not None:
+        newz = z_data[min:max]
+        return newfreq, newdbdata, desiredhalfspan, newz
+
+    return newfreq, newdbdata, desiredhalfspan
+
+
 # processes data and shows it in a graph. No function fitting or calculation of the coupling constant occurs in this
 # function. Also finds how far the dip is from the centre of the graph. (necessary in later stages (func fitting)?)
 def present_data(db_data, freq_data, fcent, fspan):
     plt.ion()  # makes graph interactive
-    # fig = plt.figure("VNA")
-    # fig.clf()
+    dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=2, prom=2, Height=18)  # get frequency of dip
+    dip_difference = (abs(f0 - fcent) / fspan) * 100
+    txt = "Dip frequency (GHz): %.3f\n Centre Frequency (GHz) : %.3f \n Percentage difference : %d%%\n" % (
+        f0, fcent, dip_difference)
+    print(txt)
 
-    plt.plot(freq_data, db_data)
+    if fspan >= 30e6:
+        freq_data, db_data, halfspan = find_desired_span(db_data, freq_data, f0)
+
+    # plot figure with correct span
+    plt.figure()
     plt.ylabel('S11 (dB)')
     plt.xlabel('Frequency (GHz)')
     plt.title("f = %.3f GHz" % (fcent / 1e9), fontsize=16)
-
-    dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=30, prom=2, Height=18)  # get frequency of dip
-    dip_difference = (abs(f0 - fcent) / fspan) * 100
-    txt = "Dip frequency (GHz): %.3f\n Centre Frequency (GHz) : %.3f \n Percentage difference : %d%%\n" % (
-    f0, fcent, dip_difference)
-    print(txt)
-
+    plt.plot(freq_data, db_data)
     plt.text(10, 10, txt)
     plt.show()
 
 
+# unwraps phase and guesses delay based off that
+def bootleg_delay(f_data, z_data):
+    phase = np.unwrap(np.angle(z_data))
+    gradient, intercept, r_value, p_value, std_err = stats.linregress(f_data, phase)
+    delayguess = gradient * (-1.) / (np.pi * 2.)
+    return delayguess
+
+
+def plotunwrappedphase(f_data, z_data):
+    plt.ion()
+    phase = np.unwrap(np.angle(z_data))
+    slope = np.gradient(phase)
+    plt.figure()
+    plt.ylabel('arg |S11| ')
+    plt.xlabel('Frequency (GHz)')
+    plt.title("Phase", fontsize=16)
+    plt.plot(f_data, phase, f_data, slope)
+    plt.show()
+
+
+def getbetafromphase(f_data, z_data):
+    mag_data = abs(z_data)
+    powerbeta1 = cf.power_beta(20 * np.log10(mag_data).min(), 20 * np.log10(mag_data).max())
+    powerbeta2 = 1 / powerbeta1
+
+    phase = np.unwrap(np.angle(z_data))
+    slope = np.gradient(phase)
+    maxidx = np.argmax(np.abs(slope))
+    grad = slope[maxidx]
+    if grad > 0:
+        if powerbeta1 > 1:
+            beta = powerbeta1
+        else:
+            beta = powerbeta2
+        print("Overcoupled! Beta is", beta)
+    else:
+        if powerbeta1 < 1:
+            beta = powerbeta1
+        else:
+            beta = powerbeta2
+        print("Undercoupled! Beta is", beta)
+    return beta
+
+
 def fit_data(f_data, z_data, db_data, fcent, fspan):
-
-    # find desired span
-    port1 = circuit.reflection_port(f_data, z_data)
-    port1.autofit()
-    desiredspan = 4*(port1.fitresults['fr']/port1.fitresults['Ql'])
-    print(desiredspan)
-
     # find percentage difference and then centre and fit to desired span
-    dips, f0, dips_dict = cf.dipfinder(db_data, f_data, p_width=30, prom=2, Height=18)
+    dips, f0, dips_dict = cf.dipfinder(db_data, f_data, p_width=2, prom=2, Height=15)
 
     dip_difference = ((f0 - fcent) / fspan) * 100
-    print("dip difference =", dip_difference) #, "f0 index = ", dips[0])
+    print("dip difference =", dip_difference)
 
-    if dip_difference > 0:
-        newspanlen = len(f_data[dips[0]:]) - 1
-        if desiredspan < fspan:
-            newspanlen = int(newspanlen*(desiredspan/fspan))
-        elif fspan >= 100e06:
-            newspanlen = int(newspanlen/10)
-        print("newspanlen = ", newspanlen)
-        min = dips[0]-newspanlen
-        max = dips[0]+newspanlen
-        f_data = f_data[min:max]
-        z_data = z_data[min:max]
-        print("new length of f_Data = ", len(f_data))
-    else:
-        newspanlen = len(f_data[:dips[0]]) - 1
-        if desiredspan < fspan:
-            newspanlen = int(newspanlen*(desiredspan/fspan))
+    # find desired span
+    newfreq, newdb, newhalfspan, newz = find_desired_span(db_data, f_data, f0, z_data=z_data)
 
-        f_data = f_data[dips[0] - newspanlen:dips[0] + newspanlen]
-        z_data = z_data[dips[0] - newspanlen:dips[0] + newspanlen]
-
-    port2 = circuit.reflection_port(f_data, z_data)
+    # fitdata
+    port2 = circuit.reflection_port(newfreq, newz)
     port2.autofit()
+    delayguess = bootleg_delay(newfreq, newz)
+
     mindelay = port2._delay
     minchi = port2.fitresults["chi_square"]
     print("current delay = ", mindelay, "curr chi = ", minchi)
-    delays = np.linspace(-2*mindelay,2*mindelay,100)
+    delays = np.linspace(-2 * delayguess, 2 * delayguess, 100)
 
+    print("GUESS DELAY = ", delayguess)
     for i in delays:
         port2.autofit(electric_delay=i)
         if port2.fitresults["chi_square"] is None:
@@ -213,12 +264,16 @@ def fit_data(f_data, z_data, db_data, fcent, fspan):
             mindelay = i
 
     print("MIN  CHI, DELAY=", minchi, mindelay)
-    port2.autofit(electric_delay= mindelay)
+    port2.autofit(electric_delay=mindelay)
     # port1.plotrawdata()
     port2.plotall()
-    couplingcoeff = port2.fitresults['Qc']/port2.fitresults['Ql'] -1
-    powerbeta = cf.power_beta(20*np.log10(abs(z_data)).min(),20*np.log10(abs(z_data)).max())
-    print ("BETA = ", couplingcoeff, "BETA (square version) = ", powerbeta)
+    couplingcoeff = port2.fitresults['Qc'] / port2.fitresults['Ql'] - 1
+    powerbeta1 = cf.power_beta(20 * np.log10(abs(z_data)).min(), 20 * np.log10(abs(z_data)).max())
+    powerbeta2 = 1 / powerbeta1
+    getbetafromphase(newfreq, newz)
+    port2.fitresults['beta'] = couplingcoeff
+    port2.fitresults['PB'] = np.array([powerbeta1, powerbeta2])
+    print("BETA = ", couplingcoeff, "BETA (square version) = ", powerbeta1, powerbeta2)
     print("Fit results:", port2.fitresults)
-    print("Fit results PORT1:", port1.fitresults)
 
+    return port2.fitresults

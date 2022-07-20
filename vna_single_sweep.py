@@ -6,8 +6,8 @@ __version__ = '20.03.2015_1.0'
 import time
 
 #import cryolib.vna_n5230a_PNA as vna
-#import cryolib.vna_N5225A_VNA_usb as vna
-import cryolib.vna_N5225A_VNA as vna
+import cryolib.vna_N5225A_VNA_usb as vna
+#import cryolib.vna_N5225A_VNA as vna
 #import cryolib.vna_E5061B_ENA as vna
 #import cryolib.vna_FFox as vna
 #import cryolib.vna_8720ET_VNA as vna
@@ -29,7 +29,7 @@ averaging_mode="sweep"
 
 # Other stuff from here
 
-VNA_gpib = ""
+VNA_gpib = "USB0::0x0957::0x0118::MY57252028::0::INSTR"
 device_id = ""
 channel = ""
 email_notif_list="[]"

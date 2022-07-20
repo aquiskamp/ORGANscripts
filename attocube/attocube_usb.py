@@ -10,7 +10,7 @@ class ANC300():
     _modes = ['gnd','cap','stp']
     
     def __init__(self):
-        self.host = 'ASRL4::INSTR' #usb address
+        self.host = 'ASRL3::INSTR' #usb address
         self._freq = {}
         self._mode = {}
         self._V = {}
