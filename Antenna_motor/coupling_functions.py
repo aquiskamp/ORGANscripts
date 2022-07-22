@@ -164,8 +164,8 @@ def move_figure(position="top-left"):
 
     mgr = plt.get_current_fig_manager()
     #gr.full_screen_toggle()  # primitive but works to get screen size
-    #py = mgr.canvas.height()
-    #px = mgr.canvas.width()
+    py = mgr.canvas.height()
+    px = mgr.canvas.width()
 
     d = 20  # width of the window border in pixels
     if position == "top":

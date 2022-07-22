@@ -4,7 +4,7 @@ import time
 import numpy as np
 import pyvisa
 from tqdm import tqdm
-from attocube.attocube_usb import ANC300
+from attocube_usb import ANC300
 anc = ANC300()
 
 #anc.step('x',1000,'d')

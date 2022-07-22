@@ -2,6 +2,7 @@ import numpy as np
 from scipy.signal import find_peaks
 from scipy.signal import peak_widths
 from scipy.signal import peak_prominences
+import matplotlib.pyplot as plt
 
 def find_nearest(a, a0):
     "Element in nd array `a` closest to the scalar value `a0`"
@@ -35,3 +36,35 @@ def full_freq_Q3db(data_db, freq_list, prom, peak_width, rel, window, Height, xm
     peak_heights = peaks[1]['peak_heights']
 
     return peaks[0], f0s, Qs, peak_heights
+
+
+def move_figure(position="top-left"):
+    '''
+    Move and resize a window to a set of standard positions on the screen.
+    Possible positions are:
+    top, bottom, left, right, top-left, top-right, bottom-left, bottom-right
+    '''
+
+    mgr = plt.get_current_fig_manager()
+    #gr.full_screen_toggle()  # primitive but works to get screen size
+    py = mgr.canvas.height()
+    px = mgr.canvas.width()
+
+    d = 20  # width of the window border in pixels
+    if position == "top":
+        # x-top-left-corner, y-top-left-corner, x-width, y-width (in pixels)
+        mgr.window.setGeometry(d, 4*d, px - 2*d, py/2 - 4*d)
+    elif position == "bottom":
+        mgr.window.setGeometry(d, py/2 + 5*d, px - 2*d, py/2 - 4*d)
+    elif position == "left":
+        mgr.window.setGeometry(d, 4*d, px/2 - 2*d, py - 4*d)
+    elif position == "right":
+        mgr.window.setGeometry(px/2 + d, 4*d, px/2 - 2*d, py - 4*d)
+    elif position == "top-left":
+        mgr.window.setGeometry(d, 4*d,600,500)
+    elif position == "top-right":
+        mgr.window.setGeometry(px/2 + d, 4*d, px/2 - 2*d, py/2 - 4*d)
+    elif position == "bottom-left":
+        mgr.window.setGeometry(d, py/2 + 5*d, px/2 - 2*d, py/2 - 4*d)
+    elif position == "bottom-right":
+        mgr.window.setGeometry(px/2 + d, py/2 + 5*d, px/2 - 2*d, py/2 - 4*d)

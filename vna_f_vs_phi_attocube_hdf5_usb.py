@@ -1,10 +1,8 @@
 __author__ = 'Aaron'
 
-import warnings
 import time
 import numpy as np
 import cryolib.general as gen
-import matplotlib.pyplot as plt
 from prettytable import PrettyTable
 from attocube.attocube_usb import ANC300
 import vna_single_sweep as vnass
@@ -16,9 +14,11 @@ import h5py
 from attocube.ato_func import ato_hdf5_parser
 from matplotlib import cm
 import matplotlib
+import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
-from tqdm import tqdm
 from matplotlib.backends.backend_pdf import PdfPages
+from tqdm import tqdm
+from useful_functions import *
 matplotlib.use('Qt5Agg')
 
 fmt = "%Y_%m_%d %H_%M_%S"
@@ -26,14 +26,14 @@ tz = ['Australia/Perth']
 anc = ANC300()
 delay_start = False
 delay = 10*3600
-wait_for_temp = False
-wait_temp = 4
+wait_for_temp = True
+wait_temp = 5
 
 db_min = -50
 db_max = -100
 
 # Folder To Save Files to:
-exp_name = 'rt_hollow_6_screws'
+exp_name = '4k_teflon_pins'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
@@ -41,31 +41,32 @@ filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 8_000
-ato_step = 200
+ato_end = 100_000
+ato_step = 400
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
 
-setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
+
+setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x': 1000} # freq in
 anc.freq(setFreq)
 anc.V(setVoltage)
 anc.ground()
 
 # Static Temperature:
-measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings
-LAKE_gpib = "GPIB1::13::INSTR"
+LAKE_gpib = "GPIB0::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
 LAKE_channel = "8"
 
 # SCRIPT STARTS HERE
-warnings.filterwarnings('ignore', '.*GUI is implemented*')  # Suppress Matplotlib warning
 plt.ion()
 fig = plt.figure("VNA DOWNLOAD")
 plt.draw()
+move_figure()
 
 plt.ion()
 fig1 = plt.figure("MODE MAP")
@@ -162,8 +163,7 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
         except:
             None
 
-        full_freq = np.linspace(mode_list[0][0] - fspan // 2, fcent + fspan // 2,
-                                ready_data.shape[0])  # freq list in Hz
+        full_freq = np.linspace(mode_list[0][0] - fspan // 2, fcent + fspan // 2,ready_data.shape[0])  # freq list in Hz
         dset = f.create_dataset(str(ato_pos), data=ready_data, compression='gzip', compression_opts=6)  # VNA dset
         try:
             f['Freq']

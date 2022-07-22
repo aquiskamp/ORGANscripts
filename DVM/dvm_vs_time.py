@@ -12,12 +12,12 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
 temp_target = 5
-time_step = 5*60
+time_step = 60*3
 
 # Folder To Save Files to:
 exp_name = 'rod_continuity_cooldown'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
-save_file = filepath/'resistance_vs_temp.txt'
+save_file = filepath/'resistance_vs_temp_rod_vs_cav.txt'
 
 # Static Temperature:
 measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
@@ -26,7 +26,7 @@ temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Acce
 # Temperature Controller Settings
 LAKE_gpib = "GPIB0::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
-LAKE_channel = "8"
+LAKE_channel = "A"
 
 dvm.connect() #connect to dvm
 dvm_range = 1_000
@@ -43,11 +43,14 @@ if measure_temp:
 while temp>temp_target:
     dvm_val = dvm.read_2w_meas(dvm_range,dvm_res) #stage position
     temp = lakesm.get_temp(LAKE_channel)
+    temp2 = lakesm.get_temp('B')
     print(f'Current temp is {temp}K')
+    print(f'Current temp is {temp2}K')
     print(f'Current resistance is {dvm_val}')
     t = datetime.now(timezone('Australia/Perth')).strftime(fmt)
     with open(save_file,'a') as f:
         f.write(str(temp)+',')
+        f.write(str(temp2)+',')
         f.write(str(dvm_val)+',')
         f.write(str(t))
         f.write('\n')

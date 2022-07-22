@@ -6,7 +6,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-dvm_address = 'USB0::0x0957::0x0607::MY47011729::0::INSTR'
+dvm_address = 'USB0::0x2A8D::0x1301::MY57230874::0::INSTR'
 rm = pyvisa.ResourceManager()
 
 def connect():

@@ -30,14 +30,14 @@ window = 500
 Height = -80 # in db
 
 # Folder To Save Files to:
-exp_name = 'NbTi_rebored'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'NbTi_bulk'/exp_name
+exp_name = 'copper_cav_new_media'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Tumbler_test'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
 
 # Static Temperature:
-measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings
@@ -116,9 +116,8 @@ try:
     plt.plot(f0s/1e9, mag_data_db[peaks], "x", color="red", markersize=10)
     plt.xlabel(r'Frequency (GHz)',fontsize=22)
     plt.ylabel('$|S_{21}|$ (dB)',fontsize=22)
-    ax.tick_params(axis='x', labelsize=10)
-    ax.tick_params(axis='y', labelsize=10)
-    plt.show()
+    ax.tick_params(axis='x', labelsize=16)
+    ax.tick_params(axis='y', labelsize=16)
 
     # save plot
     pp = PdfPages(filepath / (exp_name + '_full_freq.pdf'))
