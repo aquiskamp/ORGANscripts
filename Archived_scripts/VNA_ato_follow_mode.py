@@ -11,7 +11,8 @@ import h5py
 from pathlib import Path as p
 import pyvisa
 import vna_single_sweep as vnass
-import DAQ_functions as df
+from DAQ_scripts import DAQ_functions as df
+
 matplotlib.use('TkAgg')
 rm = pyvisa.ResourceManager()
 #import lakeshore_temp as lakesm

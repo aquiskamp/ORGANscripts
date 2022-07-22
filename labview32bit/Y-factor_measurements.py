@@ -2,7 +2,7 @@
 import numpy as np
 import time
 from pathlib import Path as p
-import DAQ_functions as df
+from DAQ_scripts import DAQ_functions as df
 import subprocess
 from tqdm import tqdm
 

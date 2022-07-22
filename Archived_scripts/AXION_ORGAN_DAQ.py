@@ -21,7 +21,7 @@ import matplotlib.ticker as mtick
 import h5py
 from pathlib import Path as p
 import vna_single_sweep as vnass
-import DAQ_functions as df
+from DAQ_scripts import DAQ_functions as df
 
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
