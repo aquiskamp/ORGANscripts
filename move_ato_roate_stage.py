@@ -17,7 +17,8 @@ anc = ANC300()
 # # setFreq = 1000 # freq in Hz
 rm = pyvisa.ResourceManager()
 print(rm.list_resources())
-inst = rm.open_resource('ASRL4::INSTR') #usually COM
+inst = rm.open_resource('ASRL5::INSTR') #usually COM
+#time.sleep(30)
 # # inst.clear()# 3
 # # inst.write('setv 1 30')
 # # # # inst.write('setf 1 1000')

@@ -1,6 +1,8 @@
 __author__ = 'Deepali Rajawat'
 
 # dont forget to import things
+import time
+
 from easygui import *
 from prettytable import PrettyTable
 import numpy as np
@@ -27,9 +29,9 @@ def input_popup(default):
     text = "Enter the following details:"
     title = "VNA Sweep Parameters"
     input_list = ["Centre Frequency (Hz)", "Frequency Span (Hz)", "Bandwidth (Hz)", "No. Points", "No. Averages",
-                  "Power (dBm)"]
+                  "Power (dBm)", "Coupling Constant (β)"]
     if default is True:
-        param = np.array([7130000000, 100000000, 1000, 3201, 1, -10])
+        param = np.array([7130000000, 100000000, 1000, 3201, 1, -10, 2])
     else:
         output = multenterbox(text, title, input_list)
         param = np.array(output)
@@ -75,6 +77,8 @@ def gather_data(params, writefile):
         newfreq, newdb, desiredhalfspan = find_desired_span(db_data, freq_data, f0)
         params[0] = f0
         params[1] = int(desiredhalfspan * 2)
+        fspan = params[1]
+        freq_data = gen.get_frequency_space(f0, fspan, npoints)
         # params[1] = int(fspan / 2)  # idk if you need to typecast
 
         sweep_data = vnass.sweep(params)  # Do a sweep with these parameters
@@ -106,7 +110,7 @@ def gather_data(params, writefile):
 
         print('SWEEP FINISHED')
 
-    return ready_data, db_data, z_data, freq_data
+    return ready_data, db_data, z_data, freq_data, f0, fspan           # REMEMBER THAT YOU ADDED FO, fspan
 
 
 def print_h5_struct(name, obj):
@@ -169,22 +173,33 @@ def find_desired_span(db_data, f_data, f0, z_data=None):
 def present_data(db_data, freq_data, fcent, fspan):
     plt.ion()  # makes graph interactive
     dips, f0, dips_dict = cf.dipfinder(db_data, freq_data, p_width=2, prom=2, Height=18)  # get frequency of dip
-    dip_difference = (abs(f0 - fcent) / fspan) * 100
-    txt = "Dip frequency (GHz): %.3f\n Centre Frequency (GHz) : %.3f \n Percentage difference : %d%%\n" % (
-        f0, fcent, dip_difference)
-    print(txt)
+    # dip_difference = (abs(f0 - fcent) / fspan) * 100
+    # txt = "Dip frequency (GHz): %.3f\n Centre Frequency (GHz) : %.3f \n Percentage difference : %d%%\n" % (
+    #     f0, fcent, dip_difference)
+    # print(txt)
 
     if fspan >= 30e6:
         freq_data, db_data, halfspan = find_desired_span(db_data, freq_data, f0)
 
     # plot figure with correct span
-    plt.figure()
+    fig = plt.figure()
     plt.ylabel('S11 (dB)')
     plt.xlabel('Frequency (GHz)')
     plt.title("f = %.3f GHz" % (fcent / 1e9), fontsize=16)
     plt.plot(freq_data, db_data)
-    plt.text(10, 10, txt)
-    plt.show()
+    #plt.text(10, 10, txt)
+    plt.show()  # neccessary?
+
+    return fig
+
+
+# no idea if this works
+def update_graph(fig, newdb, newfreq):
+    fig.set_xdata(newfreq)
+    fig.set_ydata(newdb)
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+    time.sleep(0.1)
 
 
 # unwraps phase and guesses delay based off that
@@ -207,7 +222,7 @@ def plotunwrappedphase(f_data, z_data):
     plt.show()
 
 
-def getbetafromphase(f_data, z_data):
+def getbetafromphase(z_data):
     mag_data = abs(z_data)
     powerbeta1 = cf.power_beta(20 * np.log10(mag_data).min(), 20 * np.log10(mag_data).max())
     powerbeta2 = 1 / powerbeta1
@@ -266,7 +281,7 @@ def fit_data(f_data, z_data, db_data, fcent, fspan):
     print("MIN  CHI, DELAY=", minchi, mindelay)
     port2.autofit(electric_delay=mindelay)
     # port1.plotrawdata()
-    port2.plotall()
+    #port2.plotall()
     couplingcoeff = port2.fitresults['Qc'] / port2.fitresults['Ql'] - 1
     powerbeta1 = cf.power_beta(20 * np.log10(abs(z_data)).min(), 20 * np.log10(abs(z_data)).max())
     powerbeta2 = 1 / powerbeta1

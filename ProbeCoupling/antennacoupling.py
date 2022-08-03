@@ -15,9 +15,9 @@ from pathlib import Path as p
 
 
 #-----reading file and fitting tings----------
-path = r"C:\Users\deepa\PycharmProjects\pythonProject\Deepali_single_sweep_010.hdf5"
+#path = r"C:\Users\deepa\PycharmProjects\pythonProject\Deepali_single_sweep_010.hdf5"
 #path = r"C:\Users\deepa\OneDrive\Documents\2022\SEM 1\Research\data\rt_test\rt_test.hdf5"
-#path = r"C:\Users\deepa\OneDrive\Documents\2022\SEM 1\Research\data\vna_antennacoupling7130000000_time=2022_07_15 15_57_01.h5"
+path = r"C:\Users\deepa\OneDrive\Documents\2022\SEM 1\Research\data\vna_antennacoupling7130000000_time=2022_07_15 15_57_01.h5"
 #path = r"C:\Users\deepa\OneDrive\Documents\2022\SEM 1\Research\data\vna_antennacoupling7130000000_time=2022_07_15 16_24_40.h5"
 
 #path = r"C:\Users\deepa\OneDrive\Documents\2022\SEM 1\Research\data\antenna_vs_freq\antenna_vs_freq.hdf5"
