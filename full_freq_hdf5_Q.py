@@ -24,26 +24,26 @@ tz = ['Australia/Perth']
 
 #Q3db params
 prom = 5
-peak_width = 2
+peak_width = 5
 rel = 0.1
 window = 500
-Height = -80 # in db
+Height = -90 # in db
 
 # Folder To Save Files to:
-exp_name = 'copper_cav_new_media'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Tumbler_test'/exp_name
+exp_name = 'rt_empty_silver_r2d2'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'run_1b'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
 
 # Static Temperature:
-measure_temp = False  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings
 LAKE_gpib = "GPIB0::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
-LAKE_channel = "8"
+LAKE_channel = "A"
 
 if measure_temp:
     print("Preparing Lakeshore for active Temperature Measurement")
