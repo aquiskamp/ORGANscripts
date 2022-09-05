@@ -27,10 +27,10 @@ prom = 5
 peak_width = 5
 rel = 0.1
 window = 500
-Height = -90 # in db
+Height = -75 # in db
 
 # Folder To Save Files to:
-exp_name = 'rt_empty_silver_r2d2'
+exp_name = '4k_empty_silver'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'run_1b'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power

@@ -6,7 +6,8 @@ __version__ = '20.03.2015_1.0'
 import time
 
 #import cryolib.vna_n5230a_PNA as vna
-import cryolib.vna_N5225A_VNA_usb as vna
+#import cryolib.vna_N5225A_VNA_usb as vna
+import cryolib.vna_N5234B_VNA_usb as vna
 #import cryolib.vna_N5225A_VNA as vna
 #import cryolib.vna_E5061B_ENA as vna
 #import cryolib.vna_FFox as vna
@@ -162,7 +163,7 @@ def sweep(params):
 
             sweep_time = vna.get_sweep_time(inst, channel)
             if averaging_mode == "sweep":
-                sweep_time = sweep_time * naverages*1 + 3# If the mode is "sweep", need to account for multiple sweeps
+                sweep_time = (sweep_time * naverages*1)*1.12 # If the mode is "sweep", need to account for multiple sweeps
             print("Freq = %2.2e Hz > Sweep Time = %.1f secs" % (fcent, round(sweep_time, 1)))
 
             if (sweep_time > 2.0):

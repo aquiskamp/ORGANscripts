@@ -16,11 +16,11 @@ from tqdm import tqdm
 anc = ANC300()
 
 ############# PARAMETERS 
-target_beta = 0.8
-beta_error_window = 0.05 # amount either side of target beta that is acceptable
+target_beta = 1
+beta_error_window = 0.01 # amount either side of target beta that is acceptable
 beta_upper = target_beta + beta_error_window #max beta
 beta_lower = target_beta - beta_error_window #min beta
-step_size = 25# how many steps per iteration
+step_size = 5 # how many steps per iteration
 dip_prom = 5 # prominence in dB of the reflection dip
 dip_width = 0 # number of points wide in freq
 max_height = 11 # must be below this value to be considered (dB)
@@ -33,8 +33,8 @@ filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
 
-setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 1000} # freq in
+setVoltage = {'y': 45} # key-value pair, x is axis, '60' is voltage Volts
+setFreq = {'y': 1000} # freq in
 
 anc.freq(setFreq)
 anc.V(setVoltage)
@@ -88,11 +88,11 @@ for mode in mode_list:
         print(f'The current fitted beta={beta}, and the power_beta={powerbeta}')
         if beta<beta_lower:
             print(f'beta<{beta_lower} so move antenna in to achieve beta_target=[{beta_lower},{beta_upper}]')
-            anc.step('x',step_size,'d')
+            anc.step('y',step_size,'d')
 
         elif beta>beta_upper:
             print(f'beta>{beta_upper} so move antenna out to achieve beta_target=[{beta_lower},{beta_upper}]')
-            anc.step('x', step_size, 'u')
+            anc.step('y', step_size, 'u')
 
         #update mode params
         mode = [f0[0], 50e6, bandwidth, npoints, power, average]
@@ -127,8 +127,8 @@ for mode in mode_list:
         fdset.attrs['vna_rbw'] = fspan / (npoints - 1)
         fdset.attrs['vna_ifb'] = bandwidth
         fdset.attrs['nmodes'] = mode_list.shape[0]
-        fdset.attrs['ato_voltage'] = setVoltage['x']
-        fdset.attrs['ato_freq'] = setFreq['x']
+        fdset.attrs['ato_voltage'] = setVoltage['y']
+        fdset.attrs['ato_freq'] = setFreq['y']
         fdset.attrs['ato_step'] = step_size
 
         dset.attrs['beta'] = fit_dict['beta']

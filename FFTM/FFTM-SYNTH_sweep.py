@@ -22,31 +22,30 @@ def FFTread(ch1):
     return fAR
 
 # Folder To Save Files to:
-exp_name = 'LNA_7_10_cal_8GHz'
+exp_name = 'LNA_15_29_cal_IQ'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'thermal_noise'/exp_name
 
-mode_f = 8e9
+mode_f = np.arange(10e9,18.25e9,0.25e9)
 psd = True     #PSD?
 
-fft_start = 2e6
-fft_end = 8e6
+fft_start = 3e6
+fft_end = 7e6
 fft_points = 401
 fftf_vec = np.linspace(fft_start,fft_end,fft_points)
 fft_cent = fftf_vec[fft_points//2]
-fft_ave = 1024
+fft_ave = 500
 ave_update_rate = fft_ave//8
-sensitivity = -70
+sensitivity = -35
 nsteps = 1
 Rx = np.zeros((fft_points,nsteps))
 
 #calibrate sweep time
-cal_fft_time = 4 # seconds
+cal_fft_time = 2 # seconds
 cal_averages = 100 # averages for time above
 sweep_time = cal_fft_time/cal_averages # for a single sweep
 
 ### synth
 sg_power = 12 #dbm
-sg_f = mode_f+fft_cent
 
 #print(rm.list_resources())
 print("I am going to use the following devices:")
@@ -91,7 +90,6 @@ fftm.write("CALC1:FEED 'XFR:POW" + str_psd + " 1'")                #Meas Data PS
 fftm.write("CALC1:FORM MLOG")                           #Meas Data LOG MAGNITUDE
 fftm.write("CALC1:UNIT:POW " + unit)                #Y axis Units dBvrms
 
-sg.write(":SOUR:FREQ:CW " + str(sg_f))
 sg.write(":SOUR:POW:LEV:IMM:AMPL " + str(sg_power)+" dBm")
 sg.write(":OUTP:STAT ON")
 sg.write(":OUTP:MOD:STAT OFF")
@@ -109,41 +107,46 @@ fig = plt.figure("FFTM DOWNLOAD")
 plt.draw()
 cf.move_figure()
 
-for ii in trange(nsteps):
-    print("Measuring " + str(ii+1) + " of " + str(nsteps))
-    fftm.write("SYST:KEY 21")  # Measurement restart
-    time.sleep(Ttime)
+for idx, mode in enumerate(tqdm(mode_f)):
+    sg_f = mode + fft_cent
+    sg.write(":SOUR:FREQ:CW " + str(sg_f))
+    for ii in range(nsteps):
+        print("Measuring " + str(ii+1) + " of " + str(nsteps))
+        fftm.write("SYST:KEY 21")  # Measurement restart
+        time.sleep(Ttime)
 
-    fftm.write("DISP:TRAC:Y:AUTO ONCE")  # Autoscales the Y-axis
-    Rx[:, ii] = FFTread("1")
+        fftm.write("DISP:TRAC:Y:AUTO ONCE")  # Autoscales the Y-axis
+        Rx[:, ii] = FFTread("1")
 
-    fig.clf()
-    ax = fig.add_subplot(111)
-    ax.plot(fftf_vec, Rx[:, ii], linewidth=2)
-    plt.title('Measured step ' + str(ii+1) + " of " + str(nsteps))
-    ax.set_ylabel('PSD ')
-    ax.set_xlabel('Frequency (Hz)')
-    plt.axis('tight')
-    plt.pause(0.01)
-    plt.draw()
+        fig.clf()
+        ax = fig.add_subplot(111)
+        ax.plot(fftf_vec, Rx[:, ii], linewidth=2)
+        plt.title('Measured step ' + str(ii+1) + " of " + str(nsteps))
+        ax.set_ylabel('PSD ')
+        ax.set_xlabel('Frequency (Hz)')
+        plt.axis('tight')
+        plt.pause(0.01)
+        plt.draw()
 
-Rx_ave = Rx.mean(axis=1) # take mean for all traces in nsteps
+    Rx_ave = Rx.mean(axis=1) # take mean for all traces in nsteps
 
-with h5py.File(filepath / p(exp_name + '.hdf5'), 'w') as f:
-    mag = f.create_dataset('FFT', data=Rx_ave, dtype=np.float64, compression="gzip", compression_opts=6)
-    freq = f.create_dataset('Freq', data=fftf_vec, dtype=np.float64, compression="gzip", compression_opts=6)
-
-    freq.attrs['mode_f'] = mode_f
-    freq.attrs['fft_start'] = fft_start
-    freq.attrs['fft_end'] = fft_end
-    freq.attrs['fft_points'] = fft_points
-    freq.attrs['fft_cent'] = fft_cent
-    freq.attrs['fft_ave'] = fft_ave
-    freq.attrs['sensitivity'] = sensitivity
-    freq.attrs['nsteps'] = nsteps
-    freq.attrs['sg_power'] = sg_power
-    freq.attrs['sg_f'] = sg_f
-    freq.attrs['units'] = unit
+    with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
+        mag = f.create_dataset(str(idx), data=Rx_ave, dtype=np.float64, compression="gzip", compression_opts=6)
+        mag.attrs['mode_f'] = mode
+        mag.attrs['sg_f'] = sg_f
+        try:
+            f['Freq']
+        except:
+            freq = f.create_dataset('Freq', data=fftf_vec, dtype=np.float64, compression="gzip", compression_opts=6)
+            freq.attrs['fft_start'] = fft_start
+            freq.attrs['fft_end'] = fft_end
+            freq.attrs['fft_points'] = fft_points
+            freq.attrs['fft_cent'] = fft_cent
+            freq.attrs['fft_ave'] = fft_ave
+            freq.attrs['sensitivity'] = sensitivity
+            freq.attrs['nsteps'] = nsteps
+            freq.attrs['sg_power'] = sg_power
+            freq.attrs['units'] = unit
 
 fftm.close()
 sg.close()

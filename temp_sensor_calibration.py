@@ -10,12 +10,12 @@ LAKE_channel_A = "A"
 LAKE_channel_B = "B"
 lakesm.connect(LAKE_gpib, LAKE_device_id)
 
-save_file = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/'A_vs_B_temp_brass_pins.txt'
+save_file = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/'empty_r2d2_warmup.txt'
 #file = open(save_file,'w')
 #file.close()
 
 wait_time = 60
-temp_target = 4.5
+temp_target = 4
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 temp_meas = lakesm.get_temp(LAKE_channel_A)

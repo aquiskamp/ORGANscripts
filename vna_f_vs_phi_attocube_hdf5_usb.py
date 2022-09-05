@@ -26,14 +26,14 @@ tz = ['Australia/Perth']
 anc = ANC300()
 delay_start = False
 delay = 10*3600
-wait_for_temp = True
+wait_for_temp = False
 wait_temp = 5
 
-db_min = -50
-db_max = -100
+db_min = -40
+db_max = -80
 
 # Folder To Save Files to:
-exp_name = '4k_teflon_pins'
+exp_name = 'rt_run1'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
@@ -41,20 +41,19 @@ filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 100_000
-ato_step = 400
+ato_end = 6_000
+ato_step = 10
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
 
-
-setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 1000} # freq in
+setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
+setFreq = {'x': 500} # freq in
 anc.freq(setFreq)
 anc.V(setVoltage)
 anc.ground()
 
 # Static Temperature:
-measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = 0  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings

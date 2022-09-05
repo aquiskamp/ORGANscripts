@@ -20,56 +20,57 @@ from matplotlib import cm
 from matplotlib.colors import Normalize
 from tqdm import tqdm
 from matplotlib.backends.backend_pdf import PdfPages
+from useful_functions import *
 
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 anc = ANC300()
 
-db_min = -50
-db_max = -90
+db_min = -40
+db_max = -80
 
 # Folder To Save Files to:
-exp_name = '4K_RT_warmup_loops'
-filepath = p.home()/'Desktop'/'Sapphire_wedges'/exp_name
+exp_name = 'rt_run4_very_strong'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'run_1b'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 6_000
-ato_step = 100
+ato_end = 10_000
+ato_step = 30
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
 
-setVoltage = {'x': 60} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 1000} # freq in
+setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
+setFreq = {'x': 500} # freq in
 anc.freq(setFreq)
 anc.V(setVoltage)
 anc.ground()
 
 # Static Temperature:
-measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = 0  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 20e-3  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings
-LAKE_gpib = "GPIB2::13::INSTR"
+LAKE_gpib = "GPIB0::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
-LAKE_channel = "8"
+LAKE_channel = "A"
 
 # SCRIPT STARTS HERE
-warnings.filterwarnings('ignore', '.*GUI is implemented*')  # Suppress Matplotlib warning
 plt.ion()
 fig = plt.figure("VNA DOWNLOAD")
 plt.draw()
+move_figure()
 
 plt.ion()
 fig1 = plt.figure("MODE MAP")
 plt.draw()
 
-plt.ion()
-fig2 = plt.figure("RES SENSOR")
-plt.draw()
-plt.pause(1)
+# plt.ion()
+# fig2 = plt.figure("RES SENSOR")
+# plt.draw()
+# plt.pause(1)
 
 mode_list = np.loadtxt(filepath / runfile, dtype='f8,f8,f8,i,i,f8', delimiter=',')
 if np.size(mode_list) == 1:  # In case we have only one mode
@@ -113,14 +114,13 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
         anc.ground()
     else:
         anc.step('x',ato_step,up_down)
-        time.sleep(0.1)  # need to sleep otherwise grounds instantly
+        time.sleep(0.5)  # need to sleep otherwise grounds instantly
 
     dvm_val = dvm.read_4w_meas(dvm_range,dvm_res) #stage position
 
     # Sweep over vna modes
     for mode in mode_list:
         sweep_data = vnass.sweep(mode)  # Do a sweep with these parameters
-
         fcent = mode[0]
         fspan = mode[1]
         bandwidth = mode[2]
@@ -183,15 +183,15 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
 
     dvm_list = np.append(dvm_list,dvm_val)
 
-    fig2.clf()
-    ax = fig2.add_subplot(111)
-    ax.set_title("ato_pos = %.1f, current_dvm = %.1f" % (ato_pos, dvm_val), fontsize=16)
-    ax.scatter(ato_pos_vals[:idx+1],dvm_list)
-    ax.set_ylabel(r'DVM reading')
-    ax.set_xlabel('ato_pos')
-    plt.axis('tight')
-    plt.draw()
-    plt.pause(0.1)
+    # fig2.clf()
+    # ax = fig2.add_subplot(111)
+    # ax.set_title("ato_pos = %.1f, current_dvm = %.1f" % (ato_pos, dvm_val), fontsize=16)
+    # ax.scatter(ato_pos_vals[:idx+1],dvm_list)
+    # ax.set_ylabel(r'DVM reading')
+    # ax.set_xlabel('ato_pos')
+    # plt.axis('tight')
+    # plt.draw()
+    # plt.pause(0.1)
 
 
     if idx % 5 == 0 and idx != 0:

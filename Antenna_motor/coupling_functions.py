@@ -155,6 +155,26 @@ def plot_freq_vs_db_mag_vs_phase(freq_GHz,db_data,phase,fcent):
     plt.tight_layout()
     plt.pause(0.1)
 
+def plot_freq_vs_db_mag_vs_phase_under(freq_GHz,db_data,phase,fcent,maxp,minp):
+    plt.ion()
+    fig = plt.figure("VNA")
+    plt.draw()
+    fig.clf()
+    move_figure()
+    ax = fig.add_subplot(111)
+    ax2 = ax.twinx()
+    ax.set_title("f = %.3f GHz" % (fcent / 1e9), fontsize=16)
+    ax.plot(freq_GHz, db_data, "g")
+    ax2.scatter(freq_GHz[minp],phase[minp],color='red')
+    ax2.scatter(freq_GHz[maxp],phase[maxp],color='red')
+    ax2.plot(freq_GHz,phase,'b')
+    ax2.set_ylabel('Phase (deg)')
+    #ax.scatter(freq_GHz,db_data[dips],marker='X',color='red',s=30)
+    ax.set_ylabel(r'$S_{21}$ [dB]')
+    ax.set_xlabel('Frequency [GHz]')
+    plt.tight_layout()
+    plt.pause(0.1)
+
 def move_figure(position="top-left"):
     '''
     Move and resize a window to a set of standard positions on the screen.

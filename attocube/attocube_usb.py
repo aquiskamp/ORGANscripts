@@ -6,7 +6,7 @@ import pyvisa
 import numpy as np
 class ANC300():
     
-    _stages = ['x']
+    _stages = ['x','y']
     _modes = ['gnd','cap','stp']
     
     def __init__(self):

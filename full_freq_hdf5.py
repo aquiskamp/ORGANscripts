@@ -18,8 +18,8 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
 # Folder To Save Files to:
-exp_name = 'NbTi_rebored'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'NbTi_bulk'/exp_name
+exp_name = 'R2D2_CD_cal'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
@@ -32,7 +32,7 @@ temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 # Temperature Controller Settings
 LAKE_gpib = "GPIB0::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
-LAKE_channel = "8"
+LAKE_channel = "A"
 
 if measure_temp:
     print("Preparing Lakeshore for active Temperature Measurement")
@@ -109,6 +109,6 @@ with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
     fdset.attrs['vna_ifb'] = bandwidth
     fdset.attrs['nmodes'] = mode_list.shape[0]
     fdset.attrs['time'] = t
-    fset.attrs['temp'] = temperature
+    fdset.attrs['temp'] = temperature
 
 print('SWEEP FINISHED')
