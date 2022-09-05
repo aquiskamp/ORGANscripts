@@ -1,5 +1,5 @@
 __author__ = 'Aaron Quiskamp'
-
+'''Set beta to some desired value then take a s21 measurement of Q using a relay and then tune the rod'''
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ from coupling_functions import *
 from attocube.attocube_usb import ANC300
 import h5py
 from tqdm import tqdm
+from relays.two_port_relay import relay_on_off
 anc = ANC300()
 
 ############# PARAMETERS 
@@ -31,11 +32,12 @@ up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
 #############
 
 # Folder To Save Files to:
-exp_name = 'OQ_rt_sweep_beta_uphase'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
+exp_name = 'OQ_sweep_rt_beta_Q'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
 
+#### Start position of mode
 # fcentral, fspan, bandwidth, npoints, naverages, power
-mode_list = np.array([[6_000_000_000,80_000_000,1500,3201,1,0]])
+mode = np.array([6_000_000_000,80_000_000,1500,3201,1,0])
 
 setVoltage = {'x':45,'y': 45} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x':500,'y': 500} # freq in
@@ -46,7 +48,6 @@ anc.ground()
 
 vnass.set_module()  # Reset VNA Module
 vnass.establish_connection_uphase()  # Establish connection to VNA
-
 ato_pos_vals = np.arange(ato_start, ato_end + ato_step, ato_step)
 
 # Attocube code begins
@@ -57,32 +58,33 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
     else:
         anc.step('x',ato_step,up_down)
         time.sleep(0.5)  # need to sleep
+    # put in reflection mode
+    relay_on_off('open', '01')
     # Sweep over vna modes
-    for mode in mode_list:
-        uphase,sweep_data = vnass.sweep_multi_trace(mode)  # Do a sweep with these parameters
-        db_data = gen.complex_to_dB(sweep_data)
-        ready_data = np.transpose(sweep_data)
+    uphase,sweep_data = vnass.sweep_multi_trace(mode)  # Do a sweep with these parameters
+    db_data = gen.complex_to_dB(sweep_data)
+    ready_data = np.transpose(sweep_data)
 
-        fcent,fspan,bandwidth,npoints,power,average = mode
+    fcent,fspan,bandwidth,npoints,power,average = mode
 
-        # Processing Starts here
-        freq_data = gen.get_frequency_space(fcent, fspan, npoints)  # Generate list of frequencies
-        freq_data_GHz = freq_data/1e9
+    # Processing Starts here
+    freq_data = gen.get_frequency_space(fcent, fspan, npoints)  # Generate list of frequencies
+    freq_data_GHz = freq_data/1e9
 
-        ######### dipfinder
-        dips, f0, dips_dict = dipfinder(db_data,freq_data,p_width=dip_width, prom=dip_prom, Height=max_height)
-        print(f'Dip found at {f0/1e9} GHz')
-        maxp = argrelextrema(uphase, np.greater,order=1)[0]
-        minp = argrelextrema(uphase, np.less,order=1)[0]
+    ######### dipfinder
+    dips, f0, dips_dict = dipfinder(db_data,freq_data,p_width=dip_width, prom=dip_prom, Height=max_height)
+    print(f'Dip found at {f0/1e9} GHz')
+    maxp = argrelextrema(uphase, np.greater,order=1)[0] # find TP in unwrapped phase
+    minp = argrelextrema(uphase, np.less,order=1)[0]
 
-        if maxp.size and minp.size != 0:
-            print('Undercoupled')
-            plot_freq_vs_db_mag_vs_phase_under(freq_data_GHz, db_data, uphase, f0[0],maxp,minp)
-            beta_power = power_beta(db_data.min(),db_data.max())
-        else:
-            print('Overcoupled')
-            plot_freq_vs_db_mag_vs_phase(freq_data_GHz, db_data, uphase, f0[0])
-            beta_power = 1/power_beta(db_data.min(),db_data.max())
+    if maxp.size and minp.size != 0:
+        print('Undercoupled')
+        plot_freq_vs_db_mag_vs_phase_under(freq_data_GHz, db_data, uphase, f0[0],maxp,minp)
+        beta_power = power_beta(db_data.min(),db_data.max())
+    else:
+        print('Overcoupled')
+        plot_freq_vs_db_mag_vs_phase(freq_data_GHz, db_data, uphase, f0[0])
+        beta_power = 1/power_beta(db_data.min(),db_data.max())
 
         print(f'The power_beta={beta_power:.2f}')
         while (beta_lower>=beta_power) or (beta_power>=beta_upper):
@@ -122,28 +124,34 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
 
             plt.pause(0.1)
         print(f'beta in range = [{beta_lower},{beta_upper}], SUCCESS!')
-        mode_list =np.array([[int(f0), fspan, bandwidth, npoints, power, average]])
+        mode =np.array([int(f0), fspan, bandwidth, npoints, power, average])
+
+        #Take S21 Q measurement now
+        relay_on_off('close', '01') # put in transmission mode
+        # Sweep over vna modes
+        uphase, sweep_data_s21 = vnass.sweep_multi_trace(mode)  # Do a sweep with these parameters
+        db_data_s21 = gen.complex_to_dB(sweep_data_s21)
+        ready_data_s21 = np.transpose(sweep_data_s21)
+
     ############ save data
     with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
-        dset = f.create_dataset(str(idx), data=ready_data, compression='gzip', compression_opts=6)  # VNA dset
-        dset.attrs['f0'] = f0
-        dset.attrs['ato_pos'] = ato_pos
-        dset.attrs['powerbeta'] = beta_power
-        try:
-            f['Freq']
-        except:
-            fdset = f.create_dataset('Freq', data=freq_data, compression='gzip', compression_opts=6)
-            fdset.attrs['f_cent'] = mode[0]  # this is from the mode map / next freq
-            fdset.attrs['vna_pow'] = mode[4]
-            fdset.attrs['vna_span'] = mode[1]
-            fdset.attrs['vna_pts'] = mode[3]
-            fdset.attrs['vna_ave'] = mode[5]
-            fdset.attrs['vna_rbw'] = mode[1] / (mode[3] - 1)
-            fdset.attrs['vna_ifb'] = mode[2]
-            fdset.attrs['ato_voltage'] = setVoltage['x']
-            fdset.attrs['ato_freq'] = setFreq['x']
-            fdset.attrs['ato_step'] = ato_step
-            fdset.attrs['total_steps'] = total_steps
+        S11 = f.create_dataset('S11_' + str(idx), data=ready_data, compression='gzip', compression_opts=6)  # VNA dset
+        S21 = f.create_dataset('S21_' + str(idx), data=ready_data_s21, compression='gzip', compression_opts=6)  # VNA dset
+        S11.attrs['f0'] = f0
+        S11.attrs['ato_pos'] = ato_pos
+        S11.attrs['powerbeta'] = beta_power
+        fsdet = f.create_dataset('Freq_'+ str(idx), data=freq_data, compression='gzip', compression_opts=6)
+        fdset.attrs['f_cent'] = mode[0]  # this is from the mode map / next freq
+        fdset.attrs['vna_pow'] = mode[4]
+        fdset.attrs['vna_span'] = mode[1]
+        fdset.attrs['vna_pts'] = mode[3]
+        fdset.attrs['vna_ave'] = mode[5]
+        fdset.attrs['vna_rbw'] = mode[1] / (mode[3] - 1)
+        fdset.attrs['vna_ifb'] = mode[2]
+        fdset.attrs['ato_voltage'] = setVoltage['x']
+        fdset.attrs['ato_freq'] = setFreq['x']
+        fdset.attrs['ato_step'] = ato_step
+        fdset.attrs['total_steps'] = total_steps
 print("Closing connection to Stepper Motor ", anc.close())
 print("ALL VALUES RECORDED.")
 
