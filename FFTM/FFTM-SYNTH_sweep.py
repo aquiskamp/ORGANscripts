@@ -22,10 +22,10 @@ def FFTread(ch1):
     return fAR
 
 # Folder To Save Files to:
-exp_name = 'LNA_15_29_cal_IQ'
+exp_name = 'LNA_15_29_cal_11_40_mixer'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'thermal_noise'/exp_name
 
-mode_f = np.arange(10e9,18.25e9,0.25e9)
+mode_f = np.arange(15e9,20.25e9,0.25e9)
 psd = True     #PSD?
 
 fft_start = 3e6
@@ -40,17 +40,17 @@ nsteps = 1
 Rx = np.zeros((fft_points,nsteps))
 
 #calibrate sweep time
-cal_fft_time = 2 # seconds
+cal_fft_time = 5 # seconds
 cal_averages = 100 # averages for time above
 sweep_time = cal_fft_time/cal_averages # for a single sweep
 
 ### synth
-sg_power = 12 #dbm
+sg_power = 18 #dbm
 
 #print(rm.list_resources())
 print("I am going to use the following devices:")
 
-fftm = rm.open_resource('GPIB3::19::INSTR')
+fftm = rm.open_resource('GPIB4::19::INSTR')
 sg = rm.open_resource('USB0::0x0957::0x1F01::MY61252954::0::INSTR')
 #sg = rm.open_resource('GPIB2::19::INSTR')
 

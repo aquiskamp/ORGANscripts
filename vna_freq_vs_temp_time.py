@@ -24,11 +24,11 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 matplotlib.use('TkAgg')
 
-db_min=-10
-db_max=-60
+db_min=-30
+db_max=-70
 
-time_step = 60 #wait time between steps
-timeout = time.time() + 8*3600  # seconds
+time_step = 2*60 #wait time between steps
+timeout = time.time() + 10*3600  # seconds
 
 anc = ANC300()
 measure_temp = 0  # Do we actually want  to measure Temperature here (Connect to Lakeshore via GPIB)?
@@ -38,8 +38,8 @@ cap = 0
 cd_plot = True #colour density plot
 
 # Folder To Save Files to:
-exp_name = '4k_beta_vs_time'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Antenna_motor'/exp_name
+exp_name = 'NbTi_baked_DR2_cooldown'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'NbTi_bulk'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
