@@ -35,7 +35,7 @@ fftf_vec = np.linspace(fft_start,fft_end,fft_points)
 fft_cent = fftf_vec[fft_points//2]
 fft_ave = 500
 ave_update_rate = fft_ave//8
-sensitivity = -35
+sensitivity = -50
 nsteps = 1
 Rx = np.zeros((fft_points,nsteps))
 

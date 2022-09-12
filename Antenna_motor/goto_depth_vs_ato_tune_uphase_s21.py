@@ -17,12 +17,12 @@ anc = ANC300()
 dvm.connect() #connect to dvm
 dvm_range = 100000
 dvm_res = 1
-dvm_error_window = 5 #move antenna to +- this value
+dvm_error_window = 10 #move antenna to +- this value
 f0_array = np.genfromtxt('f0_array.txt') #from previous run
 dvm_array = np.genfromtxt('dvm_vals.txt') #from previous run
 
 ############# ANPz101 PARAMETERS
-step_size = 10 # how many steps per iteration
+step_size = 5 # how many steps per iteration
 dip_prom = 5 # prominence in dB of the reflection dip
 dip_width = 0 # number of points wide in freq
 max_height = 10 # must be below this value to be considered (dB)
@@ -35,12 +35,12 @@ up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
 #############
 
 # Folder To Save Files to:
-exp_name = 'OQ_sweep_rt_beta_Q'
+exp_name = 'OQ_sweep_goto_dvm_s21'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
 
 #### Start position of mode
 # fcentral, fspan, bandwith, npoints, naverages, power
-mode = np.array([6_060_000_000,80_000_000,1500,3201,1,0])
+mode = np.array([6_080_000_000,80_000_000,1500,3201,1,0])
 
 setVoltage = {'x':45,'y': 45} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x':500,'y': 500} # freq in
@@ -79,13 +79,13 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
     plot_freq_vs_db_mag_vs_phase(freq_data_GHz, db_data, uphase, f0[0])
 
     ####### Go to dvm val now
-    target_dvm = np.interp(f0, f0_array, ato_pos)
+    target_dvm = np.interp(f0, f0_array, dvm_array)
     dvm_lower = target_dvm - dvm_error_window
     dvm_upper = target_dvm + dvm_error_window
     dvm_val = dvm.read_4w_meas(dvm_range, dvm_res)  #current antenna stage position
 
     while (dvm_lower>=dvm_val) or (dvm_val>=dvm_upper):
-        print(f'The current power_beta={beta_power:.2f}')
+        print(f'current dvm_val:{dvm_val:0.2f}')
         if dvm_val<dvm_lower:
             print(f'dvm_val<{dvm_lower} so move antenna out to achieve dvm_target=[{dvm_lower},{dvm_upper}]')
             anc.step('y',step_size,'u')
@@ -96,7 +96,7 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
 
         dvm_val = dvm.read_4w_meas(dvm_range, dvm_res)  #current antenna stage position
 
-    print(f'dvm_val in range = [{dvm_lower},{dvm_lower}], SUCCESS!')
+    print(f'dvm_val in range = [{dvm_lower},{dvm_upper}], SUCCESS!')
 
     # update mode params
     mode = [f0[0], fspan, bandwidth, npoints, power, average]

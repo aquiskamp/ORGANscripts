@@ -30,14 +30,14 @@ db_min = -40
 db_max = -80
 
 # Folder To Save Files to:
-exp_name = 'rt_run4_very_strong'
+exp_name = 'rt_run_5_2straight_probes'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'run_1b'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 10_000
+ato_end = 30_000
 ato_step = 30
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
