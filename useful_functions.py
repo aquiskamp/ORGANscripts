@@ -68,3 +68,7 @@ def move_figure(position="top-left"):
         mgr.window.setGeometry(d, py/2 + 5*d, px/2 - 2*d, py/2 - 4*d)
     elif position == "bottom-right":
         mgr.window.setGeometry(px/2 + d, py/2 + 5*d, px/2 - 2*d, py/2 - 4*d)
+    elif position == "desktop":
+        mgr.window.setGeometry(20*d, 6*d,700,600)
+    elif position == "desktop2":
+        mgr.window.setGeometry(60 * d, 6 * d, 700, 600)

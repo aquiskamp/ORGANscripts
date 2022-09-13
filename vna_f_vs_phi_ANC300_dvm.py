@@ -21,13 +21,14 @@ from matplotlib.colors import Normalize
 from tqdm import tqdm
 from matplotlib.backends.backend_pdf import PdfPages
 from useful_functions import *
+import matplotlib
 
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 anc = ANC300()
 
 db_min = -40
-db_max = -80
+db_max = -100
 
 # Folder To Save Files to:
 exp_name = 'rt_run_5_2straight_probes'
@@ -37,8 +38,8 @@ filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'run_1b'/exp_name
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 30_000
-ato_step = 30
+ato_end = 40_000
+ato_step = 50
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
 
@@ -61,11 +62,12 @@ LAKE_channel = "A"
 plt.ion()
 fig = plt.figure("VNA DOWNLOAD")
 plt.draw()
-move_figure()
+move_figure('desktop')
 
 plt.ion()
 fig1 = plt.figure("MODE MAP")
 plt.draw()
+move_figure('desktop2')
 
 # plt.ion()
 # fig2 = plt.figure("RES SENSOR")
