@@ -4,7 +4,8 @@ __version__ = '20.03.2015_1.0'
 # Module to communicate with VNA via GPIB/SCPI
 
 # ---- GPIB Communications Settings of this instrument >>>>
-VNA_gpib = "USB0::0x0957::0x0118::MY57252028::0::INSTR"
+#VNA_gpib = "USB0::0x0957::0x0118::MY57252028::0::INSTR"
+VNA_gpib = "USB0::0x2A8D::0x2C01::MY61255022::0::INSTR"
 VNA_device_id = "Agilent Technologies,N5225A,MY57252028,A.10.47.06"
 
 # <<<<<<

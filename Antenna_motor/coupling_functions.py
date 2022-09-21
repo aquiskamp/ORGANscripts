@@ -8,7 +8,11 @@ import matplotlib.pyplot as plt
 def dipfinder(data,freq,p_width, prom, Height):
     # Find peaks with data given as db
     dips = find_peaks(-data, prominence=prom, height=Height, width=p_width)
-    f0 = freq[dips[0]]
+    f0 = 0
+    if (len(dips[0]) > 0):
+        f0 = freq[dips[0][(dips[1]["peak_heights"]).argmax()]]
+
+
     return dips[0], f0, dips
 
 def find_nearest_pos(a, a0):

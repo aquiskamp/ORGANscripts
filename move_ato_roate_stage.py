@@ -15,14 +15,12 @@ anc = ANC300()
 # up_down = 'u' # set to up, to set to down replace 'u' with 'd'
 # setVoltage = 5 # key-value pair, x is axis, '60' is voltage Volts
 # # setFreq = 1000 # freq in Hz
-rm = pyvisa.ResourceManager()
-print(rm.list_resources())
-inst = rm.open_resource('ASRL5::INSTR') #usually COM
+#inst = rm.open_resource('ASRL5::INSTR') #usually COM
 #time.sleep(30)
 # # inst.clear()# 3
 # # inst.write('setv 1 30')
 # # # # inst.write('setf 1 1000')
-inst.write('setm 1 gnd')
+#inst.write('setm 1 gnd')
 # # # # inst.write('stepd 1 20000')
 # # # # time.sleep(30)
 # inst.read_termination = '\n'
@@ -46,11 +44,11 @@ inst.write('setm 1 gnd')
 
 #anc = ANC300()
 #
-# setVoltage = {'x': 10} # key-value pair, x is axis, '60' is voltage Volts
-# setFreq = {'x': 50} # freq in
+setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
+setFreq = {'x': 1000} # freq in
 #print(anc.cap())
-# anc.freq(setFreq)
-# anc.V(setVoltage)
-# anc.ground()
+anc.freq(setFreq)
+anc.V(setVoltage)
+anc.ground()
 # print(anc.cap())
 

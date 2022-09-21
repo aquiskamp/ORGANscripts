@@ -5,13 +5,13 @@ __version__ = '20.03.2015_1.0'
 
 # ---- GPIB Communications Settings of this instrument >>>>
 
-VNA_gpib = "GPIB0::10::INSTR"  # Full GPIB Address of VNA
-VNA_device_id = "Agilent UNKNOWN"  # VNA ID String
+VNA_gpib = "TCPIP0::192.168.0.1::inst0::INSTR"  # Full GPIB Address of VNA
+VNA_device_id = "Keysight Technologies,N9918A,MY53101874,A.12.16"  # VNA ID String
 
 # <<<<<<
 
 
-import visa
+import pyvisa
 import numpy as np
 import time
 import warnings
@@ -27,7 +27,7 @@ warnings.filterwarnings('ignore', '.*VI_SUCCESS_MAX_CNT.*')
 #
 # Returns gpib resource object or None if wrong device
 def connect(VNA_gpib, device_id, new_line_char='\n'):
-    rm = visa.ResourceManager() # Open visa resource manager
+    rm = pyvisa.ResourceManager() # Open visa resource manager
     # rm.list_resources()   # print available gpib resource names
 
     inst = rm.open_resource(VNA_gpib)  # Connect to resource

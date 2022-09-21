@@ -29,7 +29,10 @@ averaging_mode="sweep"
 
 # Other stuff from here
 
-VNA_gpib = "USB0::0x0957::0x0118::MY57252028::0::INSTR"
+#VNA_gpib = "USB0::0x0957::0x0118::MY57252028::0::INSTR"
+#VNA_gpib = "TCPIP0::192.168.0.1::inst0::INSTR"
+#VNA_gpib = "GPIB2::16::INSTR"
+VNA_gpib = "USB0::0x2A8D::0x2C01::MY61255022::0::INSTR"
 device_id = ""
 channel = ""
 email_notif_list="[]"
@@ -158,7 +161,8 @@ def sweep(params):
 
             sweep_time = vna.get_sweep_time(inst, channel)
             if averaging_mode == "sweep":
-                sweep_time = sweep_time * naverages*1 + 1.5# If the mode is "sweep", need to account for multiple sweeps
+                sweep_time = sweep_time * naverages*1 + 2# If the mode is "sweep", need to account for multiple sweeps
+                #todo remember u changed sweep time from 1.5 to 2
             print("Freq = %2.2e Hz > Sweep Time = %.1f secs" % (fcent, round(sweep_time, 1)))
 
             if (sweep_time > 2.0):
@@ -167,9 +171,12 @@ def sweep(params):
                 time_step = sweep_time
 
             t = 0.0;
-
+            time.sleep(2)
+            # todo remind me that this has been moved and that we added extra sleep for firefox
+            vna.autoscale(inst)  # Autoscale View
+            time.sleep(2)
             while (t < sweep_time):
-                vna.autoscale(inst) # Autoscale View
+
                 percentage = int(t / sweep_time * 100.0)
                 print(percentage)
                 print('Progress: [%d%%]\r' % percentage, end="")
