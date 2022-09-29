@@ -27,27 +27,27 @@ matplotlib.use('TkAgg')
 db_min=-30
 db_max=-70
 
-time_step = 2*60 #wait time between steps
+time_step = 1*30 #wait time between steps
 timeout = time.time() + 10*3600  # seconds
 
 anc = ANC300()
-measure_temp = 0  # Do we actually want  to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = 1  # Do we actually want  to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 measure_cap = False
 cap = 0
 cd_plot = True #colour density plot
 
 # Folder To Save Files to:
-exp_name = 'NbTi_baked_DR2_cooldown'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'NbTi_bulk'/exp_name
+exp_name = 'Nb3Sn_sputtered_4K'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Al_clamshell'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
 
 # Temperature Controller Settings
-LAKE_gpib = "GPIB2::13::INSTR"
+LAKE_gpib = "GPIB1::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
-LAKE_channel = "8"
+LAKE_channel = "B"
 
 # SCRIPT STARTS HERE
 warnings.filterwarnings('ignore', '.*GUI is implemented*') # Suppress Matplotlib warning

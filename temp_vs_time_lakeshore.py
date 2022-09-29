@@ -3,11 +3,13 @@ __author__ = 'Aaron'
 import time
 import lakeshore_temp as lakesm
 
-LAKE_gpib = "GPIB0::13::INSTR"
+
+LAKE_gpib = "GPIB1::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
 LAKE_channel_A = "A"
 LAKE_channel_B = "B"
 lakesm.connect(LAKE_gpib, LAKE_device_id)
+
 
 wait_time = 300
 fmt = "%Y_%m_%d %H_%M_%S"

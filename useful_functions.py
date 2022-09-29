@@ -72,3 +72,4 @@ def move_figure(position="top-left"):
         mgr.window.setGeometry(20*d, 6*d,700,600)
     elif position == "desktop2":
         mgr.window.setGeometry(60 * d, 6 * d, 700, 600)
+

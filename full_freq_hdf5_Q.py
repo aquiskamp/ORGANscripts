@@ -27,21 +27,21 @@ prom = 5
 peak_width = 3
 rel = 0.1
 window = 500
-Height = -60 # in db
+Height = -80 # in db
 
 # Folder To Save Files to:
-exp_name = 'NbTi_baked_DR2_4k'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'NbTi_bulk'/exp_name
+exp_name = 'Nb3Sn_sputtered_4K'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Al_clamshell'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
 
 # Static Temperature:
-measure_temp = 0  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = 1 #Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings
-LAKE_gpib = "GPIB0::13::INSTR"
+LAKE_gpib = "GPIB1::13::INSTR"
 LAKE_device_id = "LSCI,MODEL340,342638,061407"
 LAKE_channel = "A"
 

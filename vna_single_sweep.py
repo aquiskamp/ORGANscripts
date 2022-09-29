@@ -7,11 +7,11 @@ import time
 
 #import cryolib.vna_n5230a_PNA as vna
 #import cryolib.vna_N5225A_VNA_usb as vna
-import cryolib.vna_N5234B_VNA_usb as vna
+#import cryolib.vna_N5234B_VNA_usb as vna
 #import cryolib.vna_N5225A_VNA as vna
 #import cryolib.vna_E5061B_ENA as vna
 #import cryolib.vna_FFox as vna
-#import cryolib.vna_8720ET_VNA as vna
+import cryolib.vna_8720ET_VNA as vna
 #import cryolib.vna_rackmount_usb as vna
 
 import pyvisa # important for catching of visa errors

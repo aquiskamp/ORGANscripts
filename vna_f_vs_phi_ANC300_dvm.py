@@ -27,19 +27,19 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 anc = ANC300()
 
-db_min = -40
-db_max = -100
+db_min = -10
+db_max = -40
 
 # Folder To Save Files to:
-exp_name = 'rt_run_5_2straight_probes'
+exp_name = 'rt_run_6_loop_probe_refl'
 filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'run_1b'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 40_000
-ato_step = 50
+ato_end = 2_000
+ato_step = 20
 total_steps = int((ato_end - ato_start) / ato_step) + 1
 up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
 
