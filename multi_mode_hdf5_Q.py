@@ -90,14 +90,11 @@ for idx,mode in enumerate(tqdm(mode_list)):
     power = mode[5]
     freq_data = gen.get_frequency_space(fcent, fspan, npoints)  # Generate list of frequencies
 
-    fig.clf()
-    plot_freq_vs_db_mag(freq_data/1e9,mag_data_db,fcent)
-
     t = datetime.now(timezone('Australia/Perth')).strftime(fmt)
 
     try:
         peaks, f0s, Qs, peak_heights = full_freq_Q3db(mag_data_db,freq_data,prom,peak_width,rel,window,Height,freq_data[0],freq_data[-1])
-        #df.append([f0s,Qs,peak_heights].T)
+        df.loc[idx] = np.array([f0s[0],Qs[0],peak_heights[0]])
 
         fig, ax = plt.subplots(1, figsize=(16, 8))
         plt.plot(freq_data/1e9, mag_data_db,color='blue')

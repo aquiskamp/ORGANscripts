@@ -293,8 +293,6 @@ def download_complex(inst, channel="1"):
     return np.asarray([r_data, c_data])
 
 
-
-
 # Close connection
 # inst: gpib resource object
 def terminate(inst):

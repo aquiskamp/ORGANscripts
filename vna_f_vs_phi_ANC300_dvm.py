@@ -27,21 +27,21 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 anc = ANC300()
 
-db_min = -10
-db_max = -40
+db_min = -50
+db_max = -90
 
 # Folder To Save Files to:
-exp_name = 'rt_run_6_loop_probe_refl'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'run_1b'/exp_name
+exp_name = 'rt_run_2_weak_up_reduced_hc'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'run_1b_reduced_r_r'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 2_000
-ato_step = 20
+ato_end = 30_000
+ato_step = 50
 total_steps = int((ato_end - ato_start) / ato_step) + 1
-up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
+up_down = 'u'  # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
 setFreq = {'x': 500} # freq in

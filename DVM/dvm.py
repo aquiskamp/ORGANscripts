@@ -13,13 +13,14 @@ def connect():
     global dvm
     dvm = rm.open_resource(dvm_address)
     print(dvm.query('*IDN?'))
-    dvm.write('*RST; *CLS')
+    dvm.write('*RST')
     return dvm
 
 def setup_4w_meas(range):
     dvm.write(f'MEASure:FRESistance? {range}')
 
 def read_4w_meas(range,res):
+    #dvm.write(f'SENS:FRES:NPLC 10')
     return float(dvm.query(f'MEAS:FRES? {range},{res}'))
 
 def read_2w_meas(range,res):

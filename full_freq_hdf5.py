@@ -18,16 +18,16 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
 # Folder To Save Files to:
-exp_name = 'R2D2_CD_cal'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/exp_name
+exp_name = 'run1a_cavity_beta1_refl'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'thermal_noise_model'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
 
 # Static Temperature:
-measure_temp = True  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
-temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
+measure_temp = 0  # Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+temperature = 293  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings
 LAKE_gpib = "GPIB0::13::INSTR"
@@ -63,7 +63,7 @@ print("Loaded Settings:")
 print(table_data)
 
 vnass.set_module() # Reset VNA Module
-vnass.establish_connection()    # Establish connection to VNA
+vnass.establish_connection_s11()    # Establish connection to VNA
 
 for mode in tqdm(mode_list):
     sweep_data = vnass.sweep(mode)  # Do a sweep with these parameters
