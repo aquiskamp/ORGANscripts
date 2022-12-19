@@ -24,20 +24,20 @@ tz = ['Australia/Perth']
 
 #Q3db params
 prom = 5
-peak_width = 3
+peak_width = 1
 rel = 0.1
-window = 500
-Height = -80 # in db
+window = 1000
+Height = -75 # in db
 
 # Folder To Save Files to:
-exp_name = 'Nb3Sn_sputtered_4K'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Al_clamshell'/exp_name
+exp_name = 'rt_4k_run_2_cooldown'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q_V2'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
 
 # Static Temperature:
-measure_temp = 1 #Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
+measure_temp = 0 #Do we actually want to measure Temperature here (Connect to Lakeshore via GPIB)?
 temperature = 4  # (Kelvin) Manual Temperature Record (For No Lakeshore Access)
 
 # Temperature Controller Settings

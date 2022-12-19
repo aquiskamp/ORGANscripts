@@ -22,25 +22,26 @@ def FFTread(ch1):
     return fAR
 
 # Folder To Save Files to:
-exp_name = 'I_vs_Q_vs_IQ'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'thermal_noise_model'/exp_name
+exp_name = 'fft_machine_6MHz'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'xcorr_testing'
 
 mode_f = 8.343e9
-psd = True     #PSD?
 
-fft_start = 1e6
-fft_end = 10e6
+fft_start = 1.875e6
+fft_end = 8.125e6
 fft_points = 801
 fftf_vec = np.linspace(fft_start,fft_end,fft_points)
 fft_cent = fftf_vec[fft_points//2]
 fft_ave = 2048
-ave_update_rate = fft_ave//32
-sensitivity = -50
+ave_update_rate = fft_ave//4
+sensitivity = -20
 nsteps = 1
 Rx = np.zeros((fft_points,nsteps))
+Qx = np.zeros((fft_points,nsteps))
+Cx = np.zeros((fft_points,nsteps))
 
 #calibrate sweep time
-cal_fft_time = 5 # seconds
+cal_fft_time = 10 # seconds
 cal_averages = 100 # averages for time above
 sweep_time = cal_fft_time/cal_averages # for a single sweep
 
@@ -80,16 +81,25 @@ fftm.write("INP1:COUP AC")
 fftm.write("CALC1:STAT ON")
 #fftm.write("SENS:BAND:RES 0.01")
 
-if psd:
-    str_psd = ":PSD"
-    unit = "dBVrms/rtHz"
-else:
-    str_psd = ""
-    unit = "dBVrms"
-
-fftm.write("CALC1:FEED 'XFR:POW" + str_psd + " 1'")                #Meas Data PSD 1
-fftm.write("CALC1:FORM MLOG")                           #Meas Data LOG MAGNITUDE
-fftm.write("CALC1:UNIT:POW " + unit)                #Y axis Units dBvrms
+fftm.write("INP2:STATE ON")
+time.sleep(5)
+fftm.write("INP2:IMP 1MOHM")
+time.sleep(2)
+fftm.write("INP2:COUP AC")
+time.sleep(3)
+fftm.write("CALC1:FEED 'XFR:POWdBVrms 1'")
+fftm.write("CALC2:FEED 'XFR:POWdBVrms 2'")
+fftm.write("CALC3:FEED 'XFR:POW:CROS 2,1'")
+fftm.write("CALC1:FORM MLOG")
+fftm.write("CALC2:FORM MLOG")  # Meas Data LOG MAGNITUDE
+fftm.write("CALC3:FORM MLOG")                           #Meas Data LOG MAGNITUDE
+fftm.write("CALC1:UNIT:POW dBVrms")  # Y axis Units dBvrms
+fftm.write("CALC2:UNIT:POW dBVrms")  # Y axis Units dBvrms
+fftm.write("CALC3:UNIT:POW dBVrms")  # Y axis Units dBvrms
+fftm.write("SENS:VOLT2:RANG:UNIT:VOLT dBVrms")
+#fftm.write("SENS:VOLT2:RANG:UPP " + sensitivity)  # Input Range
+fftm.write("CALC2:STAT ON")
+fftm.write("CALC3:STAT ON")
 
 sg.write(":SOUR:FREQ:CW " + str(sg_f))
 sg.write(":SOUR:POW:LEV:IMM:AMPL " + str(sg_power)+" dBm")
@@ -116,6 +126,8 @@ for ii in trange(nsteps):
 
     fftm.write("DISP:TRAC:Y:AUTO ONCE")  # Autoscales the Y-axis
     Rx[:, ii] = FFTread("1")
+    Qx[:, ii] = FFTread("2")
+    Cx[:, ii] = FFTread("3")
 
     fig.clf()
     ax = fig.add_subplot(111)
@@ -128,9 +140,13 @@ for ii in trange(nsteps):
     plt.draw()
 
 Rx_ave = Rx.mean(axis=1) # take mean for all traces in nsteps
+Qx_ave = Qx.mean(axis=1) # take mean for all traces in nsteps
+Cx_ave = Cx.mean(axis=1) # take mean for all traces in nsteps
 
 with h5py.File(filepath / p(exp_name + '.hdf5'), 'w') as f:
-    mag = f.create_dataset('FFT', data=Rx_ave, dtype=np.float64, compression="gzip", compression_opts=6)
+    mag1 = f.create_dataset('FFT1', data=Rx_ave, dtype=np.float64, compression="gzip", compression_opts=6)
+    mag2 = f.create_dataset('FFT2', data=Qx_ave, dtype=np.float64, compression="gzip", compression_opts=6)
+    mag3 = f.create_dataset('FFT3', data=Cx_ave, dtype=np.float64, compression="gzip", compression_opts=6)
     freq = f.create_dataset('Freq', data=fftf_vec, dtype=np.float64, compression="gzip", compression_opts=6)
 
     freq.attrs['mode_f'] = mode_f
@@ -143,7 +159,6 @@ with h5py.File(filepath / p(exp_name + '.hdf5'), 'w') as f:
     freq.attrs['nsteps'] = nsteps
     freq.attrs['sg_power'] = sg_power
     freq.attrs['sg_f'] = sg_f
-    freq.attrs['units'] = unit
 
 fftm.close()
 sg.close()

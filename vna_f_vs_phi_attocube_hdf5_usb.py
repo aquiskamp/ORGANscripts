@@ -24,8 +24,8 @@ matplotlib.use('Qt5Agg')
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 anc = ANC300()
-delay_start = False
-delay = 10*3600
+delay_start = 0
+delay = 16*3600
 wait_for_temp = False
 wait_temp = 5
 
@@ -33,21 +33,22 @@ db_min = -40
 db_max = -80
 
 # Folder To Save Files to:
-exp_name = 'rt_run2_probe_all_out'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q'/exp_name
+exp_name = 'rt_run_2'
+#filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q_V2'/exp_name
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'rectangle_cavity'/'v2'/exp_name
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = p('run1.csv')
 
 ato_start = 0
-ato_end = 15_000
-ato_step = 50
+ato_end = 1200
+ato_step = 2
 total_steps = int((ato_end - ato_start) / ato_step) + 1
-up_down = 'd'  # set to up, to set to down replace 'u' with 'd'
+up_down = 'u'  # set to up, to set to down replace 'u' with 'd'
 
 setVoltage = {'x': 45} # key-value pair, x is axis, '60' is voltage Volts
-setFreq = {'x': 500} # freq in
+setFreq = {'x': 100} # freq in
 anc.freq(setFreq)
 anc.V(setVoltage)
 anc.ground()
@@ -65,12 +66,13 @@ LAKE_channel = "8"
 plt.ion()
 fig = plt.figure("VNA DOWNLOAD")
 plt.draw()
-move_figure()
+move_figure('desktop')
 
 plt.ion()
 fig1 = plt.figure("MODE MAP")
 plt.draw()
 plt.pause(0.1)
+move_figure('desktop2')
 
 mode_list = np.loadtxt(filepath / runfile, dtype='f8,f8,f8,i,i,f8', delimiter=',')
 if np.size(mode_list) == 1:  # In case we have only one mode
@@ -119,7 +121,7 @@ for idx, ato_pos in enumerate(tqdm(ato_pos_vals)):
         anc.ground()
     else:
         anc.step('x',ato_step,up_down)
-        time.sleep(0.1)  # need to sleep
+        time.sleep(0.2)  # need to sleep
 
     # Sweep over vna modes
     for mode in mode_list:

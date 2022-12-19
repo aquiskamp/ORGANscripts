@@ -2,11 +2,11 @@ __author__ = 'Aaron Quiskamp'
 
 from attocube_usb import ANC300
 anc = ANC300()
+anc.V({'x':50})
+anc.step('x',200,'d')
+#anc.step('x',5000,'d')
 
-#anc.step('y',1000,'d')
-anc.step('x',5000,'u')
-
-import pyvisa
-
-rm = pyvisa.ResourceManager()
-print(rm.list_resources())
+# import pyvisa
+#
+# rm = pyvisa.ResourceManager()
+# print(rm.list_resources())

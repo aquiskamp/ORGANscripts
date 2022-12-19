@@ -22,12 +22,12 @@ matplotlib.use('Qt5Agg')
 fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
-time_step = 1*30 #wait time between steps
-timeout = time.time() + 10*3600  # seconds
+time_step = 3*60 #wait time between steps
+timeout = time.time() + 12*3600  # seconds
 
 # Folder To Save Files to:
-exp_name = 'Nb3Sn_sputtered_RT'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'Al_clamshell'/exp_name
+exp_name = '4k_run_3_cooldown'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'ORGAN_Q_V2'/exp_name
 
 # fcentral, fspan, bandwidth, npoints, naverages, power
 runfile = filepath/'run1.csv'
@@ -93,20 +93,22 @@ while True:
 
             t = datetime.now(timezone('Australia/Perth')).strftime(fmt)
 
-            fig, ax = plt.subplots(1, figsize=(16, 8))
-            plt.plot(freq_data/1e9, mag_data_db, color='blue')
-            plt.xlabel(r'Frequency (GHz)',fontsize=22)
-            plt.ylabel('$|S_{21}|$ (dB)',fontsize=22)
+            fig.clf()
+            ax = fig.add_subplot(111)
+            ax.plot(freq_data/1e9, mag_data_db, color='blue')
+            ax.set_xlabel(r'Frequency (GHz)',fontsize=22)
+            ax.set_ylabel('$|S_{21}|$ (dB)',fontsize=22)
             ax.tick_params(axis='x', labelsize=16)
             ax.tick_params(axis='y', labelsize=16)
             plt.title(f'f_0:{fcent/1e9}GHz')
+            plt.pause(0.1)
 
             with h5py.File(filepath / p(exp_name + '.hdf5'), 'a') as f:
-                dset = f.create_dataset('step_' + str(step_idx) + '_'+ (str(idx), data=ready_data, compression='gzip', compression_opts=6)  # VNA dset
+                dset = f.create_dataset('step_' + str(step_idx) + '_'+ str(idx), data=ready_data, compression='gzip', compression_opts=6)  # VNA dset
                 dset.attrs['time'] = t
                 dset.attrs['temp'] = temperature
                 try:
-                    f['Freq']:
+                    f['Freq_'+str(idx)]
                 except:
                     fdset = f.create_dataset('Freq_'+ str(idx), data=freq_data, compression='gzip', compression_opts=6)
                     fdset.attrs['f_cent'] = fcent
@@ -117,8 +119,10 @@ while True:
                     fdset.attrs['vna_rbw'] = fspan / (npoints - 1)
                     fdset.attrs['vna_ifb'] = bandwidth
                     fdset.attrs['nmodes'] = mode_list.shape[0]
+
     step_idx += 1
     print(f'Current temp is {temperature}K')
+    print(f'Sleeping script for {time_step}s')
     time.sleep(time_step)
 
 if measure_temp:

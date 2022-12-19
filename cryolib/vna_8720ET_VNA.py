@@ -5,7 +5,7 @@ __version__ = '20.03.2015_1.0'
 
 # ---- GPIB Communications Settings of this instrument >>>>
 
-VNA_gpib = "GPIB5::16::INSTR"  # Full GPIB Address of VNA
+VNA_gpib = "GPIB0::16::INSTR"  # Full GPIB Address of VNA
 VNA_device_id = "HEWLETT PACKARD,8720ET,US39172116,7.70"  # VNA ID String
 
 import pyvisa

@@ -18,8 +18,8 @@ fmt = "%Y_%m_%d %H_%M_%S"
 tz = ['Australia/Perth']
 
 # Folder To Save Files to:
-exp_name = 'run1a_cavity_beta1_refl'
-filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'thermal_noise_model'/exp_name
+exp_name = 'beta_over'
+filepath = p.home()/'Desktop'/'Aaron'/'Experiments'/'thermal_noise_model'/'antenna_depth_vs_thermal'
 
 # CSV file inside filepath containing VNA sweep/mode parameters in format:
 # fcentral, fspan, bandwidth, npoints, naverages, power
@@ -63,7 +63,7 @@ print("Loaded Settings:")
 print(table_data)
 
 vnass.set_module() # Reset VNA Module
-vnass.establish_connection_s11()    # Establish connection to VNA
+vnass.establish_connection()    # Establish connection to VNA
 
 for mode in tqdm(mode_list):
     sweep_data = vnass.sweep(mode)  # Do a sweep with these parameters

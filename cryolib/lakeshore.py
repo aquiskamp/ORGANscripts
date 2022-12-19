@@ -5,7 +5,7 @@ __version__ = '20.03.2015_1.0'
 
 
 
-import visa
+import pyvisa
 
 import warnings
 warnings.filterwarnings('ignore', '.*VI_SUCCESS_MAX_CNT.*')
@@ -17,7 +17,7 @@ warnings.filterwarnings('ignore', '.*VI_SUCCESS_MAX_CNT.*')
 #
 # Returns gpib resource object or None if wrong device
 def connect(lake_gpib, device_id, new_line_char='\r\n'):
-    rm = visa.ResourceManager() # Open visa resource manager
+    rm = pyvisa.ResourceManager() # Open visa resource manager
     # rm.list_resources()   # print available gpib resource names
 
     inst = rm.open_resource(lake_gpib)  # Connect to resource

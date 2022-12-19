@@ -5,13 +5,13 @@ __version__ = '20.03.2015_1.0'
 
 # ---- GPIB Communications Settings of this instrument >>>>
 
-VNA_gpib = "GPIB0::10::INSTR"  # Full GPIB Address of VNA
-VNA_device_id = "Agilent UNKNOWN"  # VNA ID String
+VNA_gpib = "USB0::0x2A8D::0x5C18::MY53101874::0::INSTR"  # Full GPIB Address of VNA
+VNA_device_id = "Keysight Technologies,N9918A,MY53101874,A.12.16"  # VNA ID String
 
 # <<<<<<
 
 
-import visa
+import pyvisa
 import numpy as np
 import time
 import warnings
@@ -27,7 +27,7 @@ warnings.filterwarnings('ignore', '.*VI_SUCCESS_MAX_CNT.*')
 #
 # Returns gpib resource object or None if wrong device
 def connect(VNA_gpib, device_id, new_line_char='\n'):
-    rm = visa.ResourceManager() # Open visa resource manager
+    rm = pyvisa.ResourceManager() # Open visa resource manager
     # rm.list_resources()   # print available gpib resource names
 
     inst = rm.open_resource(VNA_gpib)  # Connect to resource
@@ -78,7 +78,7 @@ def autoscale(inst, window="1", trace_num="1"):
 # window (optional): window number, eg "1", default value = "1"
 # trace_num (optional): trace number, eg "1", default value = "1"
 # trace_name (optional): trace name, eg "My_Trace", default value = "Def_Meas"
-def s21_set_mode(inst, channel="1", window="1", trace_num="1", trace_name = "Def_Meas", port="1"):
+def set_mode(inst, channel="1", window="1", trace_num="1", trace_name = "Def_Meas", port="1"):
     if (trace_num == "1"):
         inst.write("SENS:AVER:CLE")   # Clear Averages
     #inst.write("DISPlay:WINDow" + window + ":STATE ON;*OPC?") # Activate window

@@ -73,3 +73,23 @@ def move_figure(position="top-left"):
     elif position == "desktop2":
         mgr.window.setGeometry(60 * d, 6 * d, 700, 600)
 
+import scipy.constants as constants
+import sympy as sp
+#Definitions
+kb = constants.k
+c = constants.speed_of_light
+hev = constants.value('Planck constant in eV/Hz')
+pi = constants.pi
+alpha = constants.alpha
+mu = constants.mu_0
+rho_a = 0.45 #GeV/cm**3 converted to ev**4
+Q_a = 10**6
+Lambda = 77.6 #MeV
+
+B_0,C,g_y,Q_c,V, m_a, beta, Q_L, n_L,g_ayy,cayy,f_a,SNR,T_s = sp.symbols('B_0,C,g_gamma,Q_c,V,m_a,beta,Q_L,n_L,g_a_gamma_gamma,c_a_gamma_gamma,f_a,SNR,T_s')
+U_0 = g_y**2*(alpha**2/pi**2)*(c*hev/(2*pi))**3*rho_a/((Lambda)**4)*(2*pi/mu)*n_L*B_0**2*V*(10**-12)
+df_dt = (4/5)*(Q_L*Q_a/SNR**2)*U_0**2*(f_a*beta/(1+beta)*C/(kb*T_s))**2
+def scan_time(f1, f2, ff, Q_loaded, Tsys, B0, V0, snr, coupling, lin_loss, g_target):
+    '''scan time in seconds'''
+    return float(sp.integrate((1 / df_dt.subs(
+        {B_0: B0, C: ff, Q_L: Q_loaded, V: V0, SNR: snr, T_s: Tsys, n_L: lin_loss, beta: coupling, g_y: g_target})),(f_a, f1, f2)))
